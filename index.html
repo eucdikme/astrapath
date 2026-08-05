@@ -1,0 +1,3580 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>AstraPath — Her görev, yıldızına giden yolun bir parçası.</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --void: #04060f;
+  --deep: #080d1e;
+  --nebula-blue: #0f1a35;
+  --accent: #7c6cfc;
+  --accent2: #c084fc;
+  --star: #e8e4ff;
+  --muted: #4a5280;
+  --text: #cdd6f4;
+  --text-dim: #6b7ab5;
+  --glass: rgba(15,26,53,0.6);
+  --glass-border: rgba(124,108,252,0.15);
+  --success: #a6e3a1;
+  --gold: #f9e2af;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--void);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── CANVAS UNIVERSE ── */
+#universe {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+/* ── MAIN LAYOUT ── */
+.app {
+  position: relative;
+  z-index: 10;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── VIEWS ── */
+.view { display: none; height: 100%; flex-direction: column; }
+.view.active { display: flex; }
+
+/* ── GALAXY VIEW ── */
+#view-galaxy {
+  position: relative;
+}
+
+.galaxy-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Top HUD */
+.hud-top {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  padding: 20px 24px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  pointer-events: all;
+}
+
+.hud-left {}
+.app-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+.level-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.level-num {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+.level-label { font-size: 12px; color: var(--text-dim); }
+
+.xp-bar-wrap { margin-top: 8px; width: 140px; }
+.xp-bar-bg {
+  height: 3px;
+  background: rgba(124,108,252,0.15);
+  border-radius: 2px;
+}
+.xp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 2px;
+  transition: width 1s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: 0 0 8px var(--accent);
+}
+.xp-text { font-size: 10px; color: var(--text-dim); margin-top: 4px; letter-spacing: 0.05em; }
+
+.hud-right { text-align: right; }
+.streak-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(249,226,175,0.08);
+  border: 1px solid rgba(249,226,175,0.15);
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--gold);
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 500;
+}
+.total-xp-val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--star);
+  margin-top: 8px;
+  text-align: right;
+}
+.total-xp-label { font-size: 10px; color: var(--text-dim); text-align: right; letter-spacing: 0.1em; }
+
+/* Bottom HUD */
+.hud-bottom {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 0 24px 32px;
+  pointer-events: all;
+}
+
+.today-card {
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+.today-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.today-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.today-stats { display: flex; gap: 16px; }
+.today-stat { text-align: center; }
+.today-stat-val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--star);
+  line-height: 1;
+}
+.today-stat-label { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+
+.task-list-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+.task-list-mini::-webkit-scrollbar { width: 2px; }
+.task-list-mini::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 1px; }
+
+.task-mini {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: rgba(124,108,252,0.06);
+  border: 1px solid rgba(124,108,252,0.1);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.task-mini:hover { border-color: rgba(124,108,252,0.3); background: rgba(124,108,252,0.12); }
+.task-mini.done {
+  opacity: 0.45;
+  text-decoration: line-through;
+  border-color: rgba(166,227,161,0.15);
+}
+.task-check {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--muted);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s;
+  font-size: 10px;
+}
+.task-mini.done .task-check {
+  background: var(--success);
+  border-color: var(--success);
+  color: #1e2d1e;
+}
+.task-name-mini { flex: 1; font-size: 13px; color: var(--text); }
+.cat-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.task-xp-mini {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  color: var(--accent2);
+  font-weight: 500;
+}
+
+.empty-tasks {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* Nav */
+.nav-bar {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.nav-btn {
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 10px 20px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.05em;
+}
+.nav-btn:hover, .nav-btn.active {
+  background: rgba(124,108,252,0.2);
+  border-color: rgba(124,108,252,0.4);
+  color: var(--star);
+}
+.nav-btn.add-btn {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  padding: 10px 24px;
+}
+.nav-btn.add-btn:hover { background: var(--accent2); border-color: var(--accent2); }
+
+/* ── ADD TASK VIEW ── */
+#view-add {
+  background: var(--deep);
+  padding: 0;
+  overflow-y: auto;
+}
+
+.view-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 24px 20px;
+  border-bottom: 1px solid rgba(124,108,252,0.1);
+}
+.back-btn {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: rgba(124,108,252,0.1);
+  border: 1px solid rgba(124,108,252,0.2);
+  color: var(--text);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.back-btn:hover { background: rgba(124,108,252,0.2); }
+.view-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--star);
+}
+
+.form-body { padding: 24px; display: flex; flex-direction: column; gap: 20px; flex: 1; }
+
+.field-group { display: flex; flex-direction: column; gap: 8px; }
+.field-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+.field-input {
+  background: var(--nebula-blue);
+  border: 1px solid rgba(124,108,252,0.2);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+.field-input::placeholder { color: var(--muted); }
+.field-input:focus { border-color: var(--accent); }
+textarea.field-input { resize: none; height: 80px; }
+
+.cat-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cat-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(124,108,252,0.2);
+  background: var(--nebula-blue);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-dim);
+  transition: all 0.2s;
+}
+.cat-chip:hover, .cat-chip.selected {
+  border-color: var(--accent);
+  color: var(--star);
+  background: rgba(124,108,252,0.15);
+}
+
+.xp-slider-wrap { display: flex; flex-direction: column; gap: 10px; }
+.xp-presets { display: flex; gap: 8px; flex-wrap: wrap; }
+.xp-preset {
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(124,108,252,0.2);
+  background: var(--nebula-blue);
+  color: var(--text-dim);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.xp-preset:hover, .xp-preset.selected {
+  border-color: var(--accent2);
+  color: var(--accent2);
+  background: rgba(192,132,252,0.1);
+}
+.custom-xp-row { display: flex; gap: 10px; align-items: center; }
+.custom-xp-input {
+  width: 100px;
+  background: var(--nebula-blue);
+  border: 1px solid rgba(124,108,252,0.2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  color: var(--accent2);
+  font-weight: 600;
+  outline: none;
+  text-align: center;
+}
+.custom-xp-input:focus { border-color: var(--accent2); }
+.xp-unit { font-size: 13px; color: var(--text-dim); }
+
+.submit-btn {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none;
+  border-radius: 14px;
+  padding: 16px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: all 0.2s;
+  box-shadow: 0 8px 30px rgba(124,108,252,0.3);
+  margin-top: 4px;
+}
+.submit-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(124,108,252,0.4); }
+
+/* ── PLANETS VIEW ── */
+#view-planets {
+  background: var(--deep);
+  overflow-y: auto;
+}
+.planets-body { padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+.planet-card {
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.planet-orb {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 20px currentColor;
+}
+.planet-info { flex: 1; }
+.planet-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--star);
+  margin-bottom: 2px;
+}
+.planet-cat { font-size: 12px; color: var(--text-dim); margin-bottom: 8px; }
+.planet-bar-bg {
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+}
+.planet-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 1s;
+}
+.planet-xp {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent2);
+  text-align: right;
+}
+
+/* ── STATS VIEW ── */
+#view-stats {
+  background: var(--deep);
+  overflow-y: auto;
+}
+.stats-body { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+.stat-block {
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 18px;
+}
+.stat-block-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.big-stat {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--star);
+  line-height: 1;
+}
+.big-stat-sub { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.stat-mini { text-align: center; padding: 12px; background: rgba(124,108,252,0.06); border-radius: 10px; }
+.stat-mini-val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.stat-mini-label { font-size: 11px; color: var(--text-dim); margin-top: 4px; }
+
+/* ── PARTICLES / COMPLETION ── */
+.particle {
+  position: fixed;
+  pointer-events: none;
+  z-index: 999;
+  border-radius: 50%;
+  animation: particle-fly 1.5s ease-out forwards;
+}
+@keyframes particle-fly {
+  0% { opacity: 1; transform: translate(0,0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0); }
+}
+
+/* XP Toast */
+.xp-toast {
+  position: fixed;
+  z-index: 1000;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  background: var(--glass);
+  backdrop-filter: blur(30px);
+  border: 1px solid rgba(124,108,252,0.3);
+  border-radius: 20px;
+  padding: 20px 32px;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.xp-toast.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+.xp-toast-main {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--accent2);
+  line-height: 1;
+}
+.xp-toast-sub { font-size: 13px; color: var(--text-dim); margin-top: 6px; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: rgba(124,108,252,0.3); border-radius: 2px; }
+
+/* ── STUDY VIEW ── */
+#view-study {
+  position: relative;
+  overflow: hidden;
+  background: #03040e;
+}
+
+/* ── BIG ROUND WINDOW ── */
+.space-window {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -58%);
+  width: min(88vw, 420px);
+  height: min(88vw, 420px);
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid rgba(80,80,140,0.35);
+  box-shadow:
+    0 0 0 6px rgba(20,18,50,0.8),
+    0 0 0 8px rgba(80,80,140,0.15),
+    0 0 60px rgba(100,80,200,0.12),
+    inset 0 0 80px rgba(10,8,30,0.6);
+  z-index: 1;
+}
+.space-window-canvas {
+  width: 100%; height: 100%;
+  display: block;
+}
+/* Glare on window glass */
+.window-glare {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg,
+    rgba(255,255,255,0.04) 0%,
+    transparent 40%,
+    transparent 60%,
+    rgba(100,80,200,0.04) 100%);
+  pointer-events: none;
+  z-index: 3;
+}
+/* Window rim screws / detail */
+.window-rim {
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  border: 2px solid rgba(60,55,100,0.4);
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* ── FLOOR / ROOM ── */
+.study-floor {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 48%;
+  background: linear-gradient(180deg,
+    #080614 0%,
+    #0c0a1a 40%,
+    #0e0c1e 100%);
+  z-index: 2;
+}
+/* Subtle floor reflection line */
+.study-floor::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 10%; right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(100,80,200,0.15), transparent);
+}
+
+/* ── DESK ── */
+.study-desk {
+  position: absolute;
+  bottom: 26%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(85vw, 400px);
+  z-index: 6;
+}
+.desk-top {
+  width: 100%;
+  height: 14px;
+  background: linear-gradient(180deg, #1e1830 0%, #15112a 100%);
+  border-radius: 3px 3px 0 0;
+  border-top: 1px solid rgba(120,100,200,0.2);
+  box-shadow: 0 -4px 20px rgba(80,60,160,0.08), 0 4px 15px rgba(0,0,0,0.5);
+}
+.desk-body {
+  width: 96%;
+  margin: 0 auto;
+  height: 8px;
+  background: #0f0d20;
+  border-radius: 0 0 2px 2px;
+}
+
+/* Lamp */
+.desk-lamp {
+  position: absolute;
+  right: 8%; bottom: 14px;
+  z-index: 7;
+}
+.lamp-base { width: 18px; height: 4px; background: rgba(100,90,160,0.4); border-radius: 2px; }
+.lamp-pole { width: 2px; height: 28px; background: rgba(100,90,160,0.35); margin: 0 auto; }
+.lamp-arm {
+  width: 20px; height: 2px;
+  background: rgba(100,90,160,0.35);
+  transform: rotate(-30deg);
+  transform-origin: right center;
+  margin-left: -14px;
+  margin-top: -2px;
+}
+.lamp-head {
+  width: 22px; height: 12px;
+  background: rgba(80,70,140,0.4);
+  border-radius: 2px 2px 8px 8px;
+  margin-left: -22px;
+  margin-top: -6px;
+  position: relative;
+  overflow: hidden;
+}
+.lamp-light {
+  position: absolute;
+  bottom: -20px; left: -5px;
+  width: 32px; height: 30px;
+  background: radial-gradient(ellipse at top, rgba(249,226,175,0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Book stack */
+.study-books {
+  position: absolute;
+  left: 6%; bottom: 14px;
+  display: flex; flex-direction: column; gap: 2px;
+  z-index: 7;
+}
+.s-book { border-radius: 1px; }
+
+/* Mug */
+.study-mug {
+  position: absolute;
+  right: 22%; bottom: 14px;
+  z-index: 7;
+}
+.s-mug-body {
+  width: 18px; height: 20px;
+  background: linear-gradient(180deg, #2a1f50 0%, #1c1538 100%);
+  border: 1px solid rgba(124,108,252,0.3);
+  border-radius: 2px 2px 5px 5px;
+  position: relative;
+}
+.s-mug-handle {
+  position: absolute;
+  right: -6px; top: 4px;
+  width: 6px; height: 10px;
+  border: 1.5px solid rgba(124,108,252,0.25);
+  border-left: none;
+  border-radius: 0 4px 4px 0;
+}
+.s-steam { position: absolute; top: -16px; left: 3px; display: flex; gap: 3px; }
+.s-steam-line {
+  width: 2px; height: 12px;
+  background: linear-gradient(180deg, transparent, rgba(180,160,255,0.5));
+  border-radius: 1px;
+  animation: ssteam 2.2s ease-in-out infinite;
+}
+.s-steam-line:nth-child(2) { animation-delay:.7s; height:9px; }
+.s-steam-line:nth-child(3) { animation-delay:1.4s; height:11px; }
+@keyframes ssteam {
+  0%   { transform: translateY(0) scaleX(1); opacity: 0; }
+  20%  { opacity: 0.7; }
+  100% { transform: translateY(-10px) scaleX(0.4); opacity: 0; }
+}
+
+/* Notebook */
+.study-notebook {
+  position: absolute;
+  left: 22%; bottom: 14px;
+  width: 40px; height: 30px;
+  background: linear-gradient(160deg, #1a1530 0%, #130f25 100%);
+  border: 1px solid rgba(100,80,180,0.2);
+  border-radius: 2px;
+  z-index: 7;
+}
+.notebook-lines { padding: 5px 5px; display:flex; flex-direction:column; gap:4px; }
+.nb-line { height:1px; background: rgba(100,80,180,0.25); border-radius:1px; }
+
+/* ── GIRL (back view, arkası dönük) ── */
+.study-girl {
+  position: absolute;
+  bottom: 26%;
+  left: 50%;
+  transform: translateX(-45%);
+  z-index: 5;
+  width: min(55vw, 260px);
+  height: auto;
+}
+.study-girl svg { width: 100%; height: 100%; overflow: visible; }
+
+/* Girl subtle sway */
+@keyframes girlSway {
+  0%,100% { transform: translateX(-45%) rotate(0deg); }
+  30% { transform: translateX(-45%) rotate(0.4deg); }
+  70% { transform: translateX(-45%) rotate(-0.3deg); }
+}
+.study-girl { animation: girlSway 6s ease-in-out infinite; transform-origin: bottom center; }
+
+/* Headphone glow pulse */
+@keyframes hpGlow {
+  0%,100% { filter: drop-shadow(0 0 3px rgba(124,108,252,0.5)); }
+  50% { filter: drop-shadow(0 0 8px rgba(192,132,252,0.8)); }
+}
+.headphone-group { animation: hpGlow 3s ease-in-out infinite; }
+
+/* Writing arm */
+@keyframes writeArm {
+  0%,100% { transform: rotate(0deg) translateX(0); }
+  25% { transform: rotate(1.5deg) translateX(1px); }
+  75% { transform: rotate(-1deg) translateX(-0.5px); }
+}
+.write-arm { animation: writeArm 0.8s ease-in-out infinite; transform-origin: 80% 10%; }
+
+/* Floating dust particles */
+.fdust {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: dustFloat linear infinite;
+  z-index: 8;
+}
+@keyframes dustFloat {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 0.5; }
+  100% { transform: translateY(-80px) rotate(180deg); opacity: 0; }
+}
+
+/* ── TIMER OVERLAY (top) ── */
+.study-top {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 22px 20px 0;
+  z-index: 20;
+  pointer-events: none;
+}
+.study-tagline {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(18px,5vw,26px);
+  font-weight: 600;
+  color: #e8e0ff;
+  letter-spacing: -0.01em;
+  text-align: center;
+  line-height: 1.2;
+  text-shadow: 0 2px 20px rgba(124,108,252,0.4);
+}
+.study-tagline span { color: var(--accent2); }
+.study-subtitle {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+.study-timer-big {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(44px, 13vw, 64px);
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -3px;
+  line-height: 1;
+  margin-top: 6px;
+  text-shadow: 0 0 30px rgba(124,108,252,0.6), 0 0 60px rgba(192,132,252,0.2);
+}
+.study-task-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(124,108,252,0.1);
+  border: 1px solid rgba(124,108,252,0.2);
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  letter-spacing: 0.05em;
+}
+
+/* ── BOTTOM CONTROLS ── */
+.study-bottom {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 0 20px 24px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Sound mixer */
+.sound-section-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 2px;
+}
+.sound-grid {
+  display: flex;
+  gap: 7px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.sound-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  background: rgba(15,12,35,0.7);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(100,80,200,0.18);
+  border-radius: 14px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: all 0.25s;
+  min-width: 56px;
+  position: relative;
+  overflow: hidden;
+}
+.sound-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at 50% 0%, var(--sb-color, rgba(124,108,252,0.15)) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.sound-btn.active {
+  border-color: var(--sb-color, rgba(124,108,252,0.5));
+  box-shadow: 0 0 16px rgba(124,108,252,0.2), inset 0 0 12px rgba(124,108,252,0.06);
+}
+.sound-btn.active::before { opacity: 1; }
+.sound-btn:hover:not(.active) { border-color: rgba(100,80,200,0.35); }
+.sound-icon { font-size: 18px; line-height: 1; }
+.sound-label { font-size: 9px; color: var(--text-dim); letter-spacing: 0.05em; font-family: 'Space Grotesk', sans-serif; }
+.sound-btn.active .sound-label { color: #c8beff; }
+
+/* Volume slider (shows when active) */
+.vol-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 4px;
+}
+.vol-label { font-size: 10px; color: var(--text-dim); min-width: 22px; }
+.vol-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(100,80,200,0.2);
+  outline: none;
+  cursor: pointer;
+}
+.vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--accent2);
+  box-shadow: 0 0 6px rgba(192,132,252,0.5);
+  cursor: pointer;
+}
+
+/* Timer + back row */
+.study-ctrl-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+.s-btn {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 10px 22px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.s-btn-main {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(124,108,252,0.3);
+  min-width: 120px;
+}
+.s-btn-main:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(124,108,252,0.4); }
+.s-btn-ghost {
+  background: rgba(15,12,35,0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(100,80,200,0.2);
+  color: var(--text-dim);
+}
+.s-btn-ghost:hover { color: var(--star); border-color: rgba(100,80,200,0.4); }
+
+.s-xp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(249,226,175,0.07);
+  border: 1px solid rgba(249,226,175,0.12);
+  border-radius: 16px;
+  padding: 4px 12px;
+  font-size: 11px;
+  color: var(--gold);
+  font-family: 'Space Grotesk', sans-serif;
+  text-align: center;
+}
+
+/* Planet count control in planets view */
+.planet-count-ctrl {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  margin-bottom: 14px;
+}
+.planet-count-label { flex: 1; font-size: 13px; color: var(--text); }
+.planet-count-btn {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  background: rgba(124,108,252,0.15);
+  border: 1px solid rgba(124,108,252,0.25);
+  color: var(--star);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.planet-count-btn:hover { background: rgba(124,108,252,0.3); }
+.planet-count-val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent2);
+  min-width: 28px;
+  text-align: center;
+}
+
+/* ── AUTH SCREENS ── */
+#view-auth {
+  background: var(--void);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  min-height: 100vh;
+}
+
+.auth-logo {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--accent2);
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 30px rgba(192,132,252,0.4);
+  margin-bottom: 6px;
+}
+.auth-slogan {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: center;
+  letter-spacing: 0.08em;
+  margin-bottom: 40px;
+  max-width: 260px;
+  line-height: 1.6;
+}
+
+.auth-card {
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 4px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 24px;
+}
+.auth-tab {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-dim);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.auth-tab.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(124,108,252,0.3);
+}
+
+.auth-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.auth-label { font-size: 10px; color: var(--text-dim); letter-spacing: 0.12em; text-transform: uppercase; }
+.auth-input {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(124,108,252,0.2);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.auth-input::placeholder { color: var(--muted); }
+.auth-input:focus { border-color: var(--accent); }
+
+.auth-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none;
+  border-radius: 12px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  margin-top: 8px;
+  box-shadow: 0 6px 20px rgba(124,108,252,0.3);
+  transition: all 0.2s;
+}
+.auth-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 28px rgba(124,108,252,0.4); }
+.auth-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.auth-error {
+  background: rgba(255,80,80,0.1);
+  border: 1px solid rgba(255,80,80,0.25);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #ff9090;
+  margin-top: 10px;
+  display: none;
+}
+
+/* ── USER HUD ── */
+.user-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(124,108,252,0.08);
+  border: 1px solid rgba(124,108,252,0.15);
+  border-radius: 20px;
+  padding: 5px 12px 5px 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.user-pill:hover { background: rgba(124,108,252,0.15); }
+.user-avatar {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+}
+.user-name { font-family: 'Space Grotesk', sans-serif; font-size: 11px; color: var(--text-dim); }
+
+/* ── GALAXY EXPLORE VIEW ── */
+#view-explore {
+  background: var(--deep);
+  overflow-y: auto;
+}
+.explore-body { padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+.explore-search-wrap { display: flex; gap: 10px; }
+.explore-input {
+  flex: 1;
+  background: var(--nebula-blue);
+  border: 1px solid rgba(124,108,252,0.2);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+}
+.explore-input:focus { border-color: var(--accent); }
+.explore-input::placeholder { color: var(--muted); }
+.explore-btn {
+  background: var(--accent);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 18px;
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.explore-btn:hover { background: var(--accent2); }
+
+.explore-result {
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 18px;
+}
+.explore-username {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--star);
+  margin-bottom: 4px;
+}
+.explore-meta { font-size: 12px; color: var(--text-dim); margin-bottom: 14px; }
+.explore-planets { display: flex; flex-direction: column; gap: 8px; }
+.explore-planet-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px;
+  background: rgba(124,108,252,0.05);
+  border-radius: 10px;
+}
+
+/* ── PLANET SELECT MODAL (study) ── */
+.planet-select-modal {
+  position: fixed; inset: 0; z-index: 998;
+  background: rgba(4,6,15,0.9);
+  backdrop-filter: blur(12px);
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: 0;
+}
+.planet-select-sheet {
+  background: linear-gradient(180deg, #0f1a35 0%, #080d1e 100%);
+  border: 1px solid rgba(124,108,252,0.2);
+  border-radius: 24px 24px 0 0;
+  padding: 24px 20px 40px;
+  width: 100%;
+  max-width: 480px;
+  animation: slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.sheet-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--star);
+  margin-bottom: 6px;
+  text-align: center;
+}
+.sheet-sub { font-size: 12px; color: var(--text-dim); text-align: center; margin-bottom: 20px; }
+.planet-select-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+.planet-select-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: rgba(124,108,252,0.06);
+  border: 1px solid rgba(124,108,252,0.12);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.planet-select-item:hover, .planet-select-item.selected {
+  border-color: var(--accent);
+  background: rgba(124,108,252,0.15);
+}
+.planet-select-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.planet-select-info { flex: 1; overflow: hidden; }
+.planet-select-name { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 500; color: var(--star); }
+.planet-select-cat { font-size: 10px; color: var(--text-dim); }
+.planet-select-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none; border-radius: 14px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px; font-weight: 600; color: #fff;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(124,108,252,0.3);
+}
+
+
+</style>
+</head>
+<body>
+
+<canvas id="universe"></canvas>
+
+<div class="app">
+
+  <!-- ── AUTH VIEW ── -->
+  <div id="view-auth" class="view active">
+    <canvas id="universe" style="position:fixed;inset:0;z-index:0"></canvas>
+    <div style="position:relative;z-index:2;width:100%;max-width:360px;display:flex;flex-direction:column;align-items:center">
+      <!-- Logo -->
+      <div style="font-size:36px;margin-bottom:10px">🌌</div>
+      <div class="auth-logo">AstraPath</div>
+      <div class="auth-slogan">Her görev, yıldızına giden yolun bir parçası.</div>
+
+      <div class="auth-card">
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tab-login">Giriş Yap</button>
+          <button class="auth-tab" id="tab-register">Kayıt Ol</button>
+        </div>
+
+        <!-- Login -->
+        <div id="form-login">
+          <div class="auth-field">
+            <div class="auth-label">E-posta</div>
+            <input class="auth-input" id="login-email" type="email" placeholder="galaksi@uzay.com" autocomplete="email">
+          </div>
+          <div class="auth-field">
+            <div class="auth-label">Şifre</div>
+            <input class="auth-input" id="login-pass" type="password" placeholder="••••••••" autocomplete="current-password">
+          </div>
+          <button class="auth-btn" id="loginBtn">Galaksine Gir →</button>
+          <div class="auth-error" id="login-error"></div>
+        </div>
+
+        <!-- Register -->
+        <div id="form-register" style="display:none">
+          <div class="auth-field">
+            <div class="auth-label">Kullanıcı Adı</div>
+            <input class="auth-input" id="reg-nick" type="text" placeholder="galaksiadı" autocomplete="username">
+            <div style="font-size:10px;color:var(--text-dim);margin-top:4px">Sadece harf, rakam ve alt çizgi.</div>
+          </div>
+          <div class="auth-field">
+            <div class="auth-label">E-posta</div>
+            <input class="auth-input" id="reg-email" type="email" placeholder="galaksi@uzay.com" autocomplete="email">
+          </div>
+          <div class="auth-field">
+            <div class="auth-label">Şifre</div>
+            <input class="auth-input" id="reg-pass" type="password" placeholder="En az 6 karakter" autocomplete="new-password">
+          </div>
+          <button class="auth-btn" id="registerBtn">Evreni Başlat →</button>
+          <div class="auth-error" id="reg-error"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── GALAXY VIEW ── -->
+  <div id="view-galaxy" class="view">
+    <div class="hud-top">
+      <div class="hud-left">
+        <div class="app-title">AstraPath</div>
+        <div class="level-line">
+          <div class="level-num" id="lvlNum">1</div>
+          <div class="level-label">/ <span id="lvlTitle">Stardust</span></div>
+        </div>
+        <div class="xp-bar-wrap">
+          <div class="xp-bar-bg"><div class="xp-bar-fill" id="xpFill" style="width:0%"></div></div>
+          <div class="xp-text"><span id="xpCur">0</span> / <span id="xpNxt">150</span> XP</div>
+        </div>
+      </div>
+      <div class="hud-right">
+        <div class="user-pill" onclick="showUserMenu()" id="userPill">
+          <div class="user-avatar" id="userAvatar">?</div>
+          <div class="user-name" id="userNickname">...</div>
+        </div>
+        <div class="streak-pill" style="margin-top:8px">🔥 <span id="streakVal">0</span> gün</div>
+        <div class="total-xp-val" id="totalXpVal">0</div>
+        <div class="total-xp-label">TOPLAM XP</div>
+      </div>
+    </div>
+
+    <div style="flex:1;"></div>
+
+    <div class="hud-bottom">
+      <div class="today-card">
+        <div class="today-header">
+          <div class="today-title">Bugün</div>
+          <div class="today-stats">
+            <div class="today-stat">
+              <div class="today-stat-val" id="todayDone">0</div>
+              <div class="today-stat-label">Tamamlandı</div>
+            </div>
+            <div class="today-stat">
+              <div class="today-stat-val" id="todayXP">0</div>
+              <div class="today-stat-label">XP</div>
+            </div>
+            <div class="today-stat">
+              <div class="today-stat-val" id="todayTotal">0</div>
+              <div class="today-stat-label">Görev</div>
+            </div>
+          </div>
+        </div>
+        <div class="task-list-mini" id="taskListMini">
+          <div class="empty-tasks" id="emptyMsg">
+            ✦ Bugün henüz görev yok.<br><span style="font-size:11px;opacity:0.6">Evrenini genişletmek için bir görev ekle.</span>
+          </div>
+        </div>
+      </div>
+      <div class="nav-bar">
+        <button class="nav-btn" id="btn-planets">🪐 Gezegenler</button>
+        <button class="nav-btn add-btn" id="btn-add">+ Görev</button>
+        <button class="nav-btn" id="btn-stats">✦ İstatistik</button>
+        <button class="nav-btn" id="btn-study">🎧 Çalış</button>
+        <button class="nav-btn" id="btn-explore">🔭 Keşfet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ADD TASK VIEW ── -->
+  <div id="view-add" class="view">
+    <div class="view-header">
+      <button class="back-btn" id="back-add">←</button>
+      <div class="view-title">Yeni Görev</div>
+    </div>
+    <div class="form-body">
+      <div class="field-group">
+        <div class="field-label">Görev Adı</div>
+        <input class="field-input" id="taskName" placeholder="Bugün ne yapacaksın?" autocomplete="off">
+      </div>
+      <div class="field-group">
+        <div class="field-label">Kategori</div>
+        <div class="cat-grid" id="catGrid"></div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">XP Değeri</div>
+        <div class="xp-slider-wrap">
+          <div class="xp-presets" id="xpPresets">
+            <div class="xp-preset" data-xp="25">25</div>
+            <div class="xp-preset" data-xp="50">50</div>
+            <div class="xp-preset selected" data-xp="75">75</div>
+            <div class="xp-preset" data-xp="150">150</div>
+            <div class="xp-preset" data-xp="300">300</div>
+            <div class="xp-preset" data-xp="500">500</div>
+          </div>
+          <div class="custom-xp-row">
+            <input class="custom-xp-input" id="customXP" type="number" value="75" min="1" max="9999">
+            <span class="xp-unit">XP</span>
+          </div>
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Not (isteğe bağlı)</div>
+        <textarea class="field-input" id="taskNote" placeholder="Hedefin hakkında bir şey yaz..."></textarea>
+      </div>
+      <button class="submit-btn" id="btn-submit-task">Galaksine Ekle →</button>
+    </div>
+  </div>
+
+  <!-- ── PLANETS VIEW ── -->
+  <div id="view-planets" class="view">
+    <div class="view-header">
+      <button class="back-btn" id="back-planets">←</button>
+      <div class="view-title">Gezegenler</div>
+    </div>
+    <div style="padding:16px 24px 0">
+      <div class="planet-count-ctrl">
+        <div class="planet-count-label">Galakside görünen gezegen sayısı</div>
+        <button class="planet-count-btn" id="planet-count-minus">−</button>
+        <div class="planet-count-val" id="planetCountVal">6</div>
+        <button class="planet-count-btn" id="planet-count-plus">+</button>
+      </div>
+    </div>
+    <div class="planets-body" id="planetsBody"></div>
+  </div>
+
+  <!-- ── STUDY VIEW ── -->
+  <div id="view-study" class="view">
+
+    <!-- Big round space window -->
+    <div class="space-window">
+      <canvas class="space-window-canvas" id="windowCanvas"></canvas>
+      <div class="window-glare"></div>
+    </div>
+    <div class="window-rim"></div>
+
+    <!-- Floor / room -->
+    <div class="study-floor"></div>
+
+    <!-- Desk items -->
+    <!-- Lamp -->
+    <div class="desk-lamp" style="position:absolute;z-index:7;bottom:26%;right:calc(50% - min(42.5vw,200px) + 10px)">
+      <div class="lamp-arm"></div>
+      <div class="lamp-head"><div class="lamp-light"></div></div>
+      <div class="lamp-pole"></div>
+      <div class="lamp-base"></div>
+    </div>
+
+    <!-- Books -->
+    <div class="study-books" style="position:absolute;bottom:calc(26% + 14px);left:calc(50% - min(42.5vw,200px) + 8px)">
+      <div class="s-book" style="width:28px;height:7px;background:rgba(192,132,252,0.45);"></div>
+      <div class="s-book" style="width:32px;height:7px;background:rgba(137,180,250,0.4);"></div>
+      <div class="s-book" style="width:26px;height:7px;background:rgba(249,226,175,0.35);"></div>
+      <div class="s-book" style="width:30px;height:7px;background:rgba(166,227,161,0.3);"></div>
+    </div>
+
+    <!-- Mug -->
+    <div class="study-mug" style="position:absolute;bottom:calc(26% + 14px);right:calc(50% - min(42.5vw,200px) + 40px)">
+      <div class="s-steam">
+        <div class="s-steam-line"></div>
+        <div class="s-steam-line"></div>
+        <div class="s-steam-line"></div>
+      </div>
+      <div class="s-mug-body"><div class="s-mug-handle"></div></div>
+    </div>
+
+    <!-- Notebook -->
+    <div class="study-notebook" style="position:absolute;bottom:calc(26% + 14px);left:calc(50% - 10px)">
+      <div class="notebook-lines">
+        <div class="nb-line"></div>
+        <div class="nb-line" style="width:70%"></div>
+        <div class="nb-line"></div>
+        <div class="nb-line" style="width:85%"></div>
+      </div>
+    </div>
+
+    <!-- Desk scene — no girl, just atmospheric desk -->
+    <div class="study-girl" style="width:min(75vw,340px);height:auto;bottom:calc(26% - 10px)">
+      <svg viewBox="0 0 340 220" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="d-desk" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#221840"/>
+            <stop offset="60%" stop-color="#18112e"/>
+            <stop offset="100%" stop-color="#100c22"/>
+          </linearGradient>
+          <linearGradient id="d-desk-front" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#14102a"/>
+            <stop offset="100%" stop-color="#0c0918"/>
+          </linearGradient>
+          <linearGradient id="d-screen" x1="0.2" y1="0" x2="0.8" y2="1">
+            <stop offset="0%" stop-color="#0e1a40"/>
+            <stop offset="40%" stop-color="#0a1230"/>
+            <stop offset="100%" stop-color="#060c1e"/>
+          </linearGradient>
+          <linearGradient id="d-lamp-light" x1="0.5" y1="0" x2="0.5" y2="1">
+            <stop offset="0%" stop-color="rgba(255,220,140,0.22)"/>
+            <stop offset="100%" stop-color="rgba(255,200,80,0)"/>
+          </linearGradient>
+          <radialGradient id="d-glow-screen" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="rgba(100,120,255,0.18)"/>
+            <stop offset="100%" stop-color="transparent"/>
+          </radialGradient>
+          <radialGradient id="d-lamp-cone" cx="50%" cy="0%" r="100%">
+            <stop offset="0%" stop-color="rgba(255,215,120,0.18)"/>
+            <stop offset="60%" stop-color="rgba(255,200,80,0.06)"/>
+            <stop offset="100%" stop-color="transparent"/>
+          </radialGradient>
+          <radialGradient id="d-mug-glow" cx="50%" cy="30%" r="60%">
+            <stop offset="0%" stop-color="rgba(200,160,255,0.25)"/>
+            <stop offset="100%" stop-color="transparent"/>
+          </radialGradient>
+          <filter id="d-shadow">
+            <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="rgba(0,0,0,0.6)"/>
+          </filter>
+          <filter id="d-glow-f">
+            <feGaussianBlur stdDeviation="3" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="d-screen-glow">
+            <feGaussianBlur stdDeviation="5" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <clipPath id="d-screen-clip">
+            <rect x="98" y="22" width="104" height="72" rx="3"/>
+          </clipPath>
+        </defs>
+
+        <!-- ── LAMP CONE LIGHT (behind everything) ── -->
+        <ellipse cx="272" cy="90" rx="80" ry="110"
+          fill="url(#d-lamp-cone)" opacity="0.9"/>
+
+        <!-- ── DESK SURFACE ── -->
+        <rect x="0" y="148" width="340" height="18" rx="3" fill="url(#d-desk)"
+          filter="url(#d-shadow)"/>
+        <!-- Desk edge highlight -->
+        <rect x="0" y="148" width="340" height="2" rx="1"
+          fill="rgba(160,130,255,0.12)"/>
+        <!-- Desk front face -->
+        <rect x="0" y="165" width="340" height="12" rx="2" fill="url(#d-desk-front)"/>
+
+        <!-- Desk surface ambient glow (from screen) -->
+        <ellipse cx="150" cy="152" rx="90" ry="10"
+          fill="rgba(100,120,255,0.07)"/>
+        <!-- Lamp warmth on desk surface -->
+        <ellipse cx="265" cy="152" rx="55" ry="8"
+          fill="rgba(255,200,80,0.07)"/>
+
+        <!-- ── LAPTOP / MONITOR ── -->
+        <!-- Screen glow behind -->
+        <rect x="92" y="16" width="116" height="82" rx="6"
+          fill="rgba(80,100,255,0.12)" filter="url(#d-screen-glow)"/>
+
+        <!-- Monitor stand -->
+        <rect x="146" y="118" width="8" height="30" rx="2" fill="#1a1535"/>
+        <rect x="134" y="146" width="32" height="4" rx="2" fill="#14102a"/>
+
+        <!-- Monitor bezel -->
+        <rect x="96" y="20" width="108" height="100" rx="5"
+          fill="#0e0c22" stroke="rgba(100,90,200,0.25)" stroke-width="1.5"/>
+
+        <!-- Screen -->
+        <rect x="100" y="24" width="100" height="72" rx="3" fill="url(#d-screen)"/>
+
+        <!-- Screen glow overlay -->
+        <rect x="100" y="24" width="100" height="72" rx="3"
+          fill="url(#d-glow-screen)"/>
+
+        <!-- Screen content — code/text lines -->
+        <g clip-path="url(#d-screen-clip)" filter="url(#d-glow-f)">
+          <!-- Line 1 — purple keyword -->
+          <rect x="106" y="32" width="18" height="2.5" rx="1" fill="rgba(180,140,255,0.8)"/>
+          <rect x="127" y="32" width="30" height="2.5" rx="1" fill="rgba(120,180,255,0.6)"/>
+          <rect x="160" y="32" width="22" height="2.5" rx="1" fill="rgba(180,140,255,0.5)"/>
+
+          <!-- Line 2 -->
+          <rect x="110" y="39" width="40" height="2.5" rx="1" fill="rgba(140,220,180,0.65)"/>
+          <rect x="153" y="39" width="15" height="2.5" rx="1" fill="rgba(255,200,120,0.5)"/>
+
+          <!-- Line 3 -->
+          <rect x="114" y="46" width="25" height="2.5" rx="1" fill="rgba(120,180,255,0.55)"/>
+          <rect x="142" y="46" width="35" height="2.5" rx="1" fill="rgba(200,180,255,0.4)"/>
+
+          <!-- Line 4 -->
+          <rect x="110" y="53" width="50" height="2.5" rx="1" fill="rgba(140,220,180,0.5)"/>
+
+          <!-- Line 5 -->
+          <rect x="114" y="60" width="20" height="2.5" rx="1" fill="rgba(180,140,255,0.7)"/>
+          <rect x="137" y="60" width="28" height="2.5" rx="1" fill="rgba(120,180,255,0.45)"/>
+          <rect x="168" y="60" width="16" height="2.5" rx="1" fill="rgba(255,180,120,0.4)"/>
+
+          <!-- Line 6 -->
+          <rect x="110" y="67" width="35" height="2.5" rx="1" fill="rgba(200,180,255,0.35)"/>
+
+          <!-- Line 7 — current line with cursor -->
+          <rect x="106" y="74" width="42" height="2.5" rx="1" fill="rgba(140,220,180,0.6)"/>
+          <!-- Cursor blink -->
+          <rect x="151" y="73" width="2" height="4" rx="0.5" fill="rgba(200,180,255,0.9)">
+            <animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite"/>
+          </rect>
+
+          <!-- Screen top status bar -->
+          <rect x="100" y="24" width="100" height="5" fill="rgba(0,0,0,0.3)"/>
+          <circle cx="105" cy="26.5" r="1.5" fill="rgba(255,100,100,0.5)"/>
+          <circle cx="110" cy="26.5" r="1.5" fill="rgba(255,200,80,0.5)"/>
+          <circle cx="115" cy="26.5" r="1.5" fill="rgba(100,200,100,0.5)"/>
+        </g>
+
+        <!-- Screen bezel bottom bar -->
+        <rect x="100" y="92" width="100" height="4" rx="1" fill="rgba(0,0,0,0.35)"/>
+
+        <!-- ── BOOK STACK (left) ── -->
+        <g filter="url(#d-shadow)">
+          <!-- Book 4 (bottom) -->
+          <rect x="18" y="128" width="52" height="9" rx="1.5"
+            fill="#2a1e58" stroke="rgba(120,90,200,0.2)" stroke-width="0.5"/>
+          <rect x="18" y="128" width="52" height="2" rx="1"
+            fill="rgba(160,130,255,0.15)"/>
+          <!-- Book label spine -->
+          <rect x="20" y="130" width="6" height="5" rx="0.5" fill="rgba(255,255,255,0.06)"/>
+
+          <!-- Book 3 -->
+          <rect x="20" y="119" width="48" height="9" rx="1.5"
+            fill="#1e2a50" stroke="rgba(100,130,220,0.2)" stroke-width="0.5"/>
+          <rect x="20" y="119" width="48" height="2" rx="1"
+            fill="rgba(120,160,255,0.12)"/>
+          <rect x="22" y="121" width="6" height="5" rx="0.5" fill="rgba(255,255,255,0.05)"/>
+
+          <!-- Book 2 -->
+          <rect x="22" y="110" width="44" height="9" rx="1.5"
+            fill="#2a2040" stroke="rgba(140,110,220,0.2)" stroke-width="0.5"/>
+          <rect x="22" y="110" width="44" height="2" rx="1"
+            fill="rgba(160,140,255,0.1)"/>
+
+          <!-- Book 1 (top) — open/leaning slightly -->
+          <rect x="24" y="101" width="40" height="9" rx="1.5"
+            fill="#1a2840" stroke="rgba(100,160,220,0.2)" stroke-width="0.5"/>
+          <rect x="24" y="101" width="40" height="2" rx="1"
+            fill="rgba(100,180,255,0.12)"/>
+
+          <!-- Book labels (spines) -->
+          <rect x="60" y="101" width="4" height="46" rx="1"
+            fill="rgba(100,80,180,0.2)"/>
+
+          <!-- Page edges -->
+          <rect x="24" y="103" width="36" height="7"
+            fill="rgba(255,255,255,0.03)" rx="0"/>
+        </g>
+
+        <!-- ── MUG (right side) ── -->
+        <g filter="url(#d-glow-f)">
+          <!-- Mug glow base -->
+          <ellipse cx="258" cy="152" rx="22" ry="5" fill="rgba(180,140,255,0.1)"/>
+
+          <!-- Mug body -->
+          <rect x="242" y="116" width="32" height="36" rx="4"
+            fill="#1e1848" stroke="rgba(140,110,255,0.35)" stroke-width="1"/>
+          <!-- Mug gradient overlay -->
+          <rect x="242" y="116" width="32" height="36" rx="4"
+            fill="url(#d-mug-glow)"/>
+          <!-- Mug highlight left -->
+          <rect x="243" y="118" width="3" height="30" rx="1.5"
+            fill="rgba(255,255,255,0.06)"/>
+
+          <!-- Handle -->
+          <path d="M274 124 Q284 128 284 138 Q284 148 274 150"
+            stroke="rgba(140,110,255,0.4)" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M274 124 Q282 128 282 138 Q282 146 274 150"
+            stroke="rgba(100,80,200,0.2)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+
+          <!-- Mug icon (small planet) -->
+          <circle cx="258" cy="134" r="7" fill="none"
+            stroke="rgba(160,130,255,0.45)" stroke-width="1.2"/>
+          <ellipse cx="258" cy="134" rx="10" ry="3"
+            fill="none" stroke="rgba(160,130,255,0.3)" stroke-width="1"/>
+
+          <!-- Coffee surface -->
+          <ellipse cx="258" cy="116" rx="15" ry="4"
+            fill="#0e0c22" stroke="rgba(100,80,180,0.3)" stroke-width="0.5"/>
+          <ellipse cx="258" cy="116" rx="12" ry="3"
+            fill="#100e28"/>
+
+          <!-- Steam lines -->
+          <path d="M250 112 Q248 104 251 96" stroke="rgba(200,170,255,0.35)"
+            stroke-width="2" fill="none" stroke-linecap="round">
+            <animate attributeName="d"
+              values="M250 112 Q248 104 251 96;M250 112 Q252 103 250 95;M250 112 Q248 104 251 96"
+              dur="3s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.35;0.15;0.35" dur="3s" repeatCount="indefinite"/>
+          </path>
+          <path d="M258 110 Q256 100 259 91" stroke="rgba(180,150,255,0.3)"
+            stroke-width="2" fill="none" stroke-linecap="round">
+            <animate attributeName="d"
+              values="M258 110 Q256 100 259 91;M258 110 Q260 99 258 90;M258 110 Q256 100 259 91"
+              dur="2.5s" begin="0.5s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.3;0.1;0.3" dur="2.5s" begin="0.5s" repeatCount="indefinite"/>
+          </path>
+          <path d="M266 112 Q268 103 265 95" stroke="rgba(200,170,255,0.25)"
+            stroke-width="1.5" fill="none" stroke-linecap="round">
+            <animate attributeName="d"
+              values="M266 112 Q268 103 265 95;M266 112 Q264 102 266 94;M266 112 Q268 103 265 95"
+              dur="3.5s" begin="1s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.25;0.08;0.25" dur="3.5s" begin="1s" repeatCount="indefinite"/>
+          </path>
+        </g>
+
+        <!-- ── DESK LAMP (right) ── -->
+        <g filter="url(#d-shadow)">
+          <!-- Base -->
+          <rect x="286" y="144" width="40" height="6" rx="3" fill="#1a1535"/>
+          <rect x="290" y="140" width="32" height="6" rx="2" fill="#1e1840"/>
+
+          <!-- Pole vertical -->
+          <rect x="303" y="80" width="5" height="62" rx="2.5" fill="#1c1640"/>
+
+          <!-- Arm horizontal -->
+          <rect x="270" y="77" width="38" height="5" rx="2.5"
+            fill="#1c1640" transform="rotate(-15 270 77)"/>
+
+          <!-- Lamp head -->
+          <path d="M248 58 Q262 50 278 60 L274 82 Q260 88 248 78 Z"
+            fill="#1e1845" stroke="rgba(120,100,200,0.25)" stroke-width="1"/>
+          <!-- Lamp inner (warm light source) -->
+          <ellipse cx="263" cy="70" rx="10" ry="7"
+            fill="rgba(255,210,100,0.15)" filter="url(#d-glow-f)"/>
+          <!-- Bulb hint -->
+          <ellipse cx="263" cy="68" rx="5" ry="4" fill="rgba(255,220,130,0.25)"/>
+
+          <!-- Lamp cone light beam -->
+          <path d="M248 78 Q200 130 180 155 L340 155 Q330 120 278 82 Z"
+            fill="url(#d-lamp-light)" opacity="0.6"/>
+        </g>
+
+        <!-- ── NOTEBOOK (open, left of monitor) ── -->
+        <g filter="url(#d-shadow)">
+          <!-- Left page -->
+          <path d="M72 140 Q72 120 74 118 L92 118 L92 148 L72 148 Z"
+            fill="#16122c" stroke="rgba(100,80,180,0.15)" stroke-width="0.5"/>
+          <!-- Right page -->
+          <path d="M92 118 L92 148 L92 148 Q96 148 96 144 L96 118 Z"
+            fill="#181430" stroke="rgba(100,80,180,0.1)" stroke-width="0.5"/>
+
+          <!-- Page lines left -->
+          <line x1="75" y1="124" x2="90" y2="124" stroke="rgba(100,80,180,0.18)" stroke-width="0.8"/>
+          <line x1="75" y1="128" x2="90" y2="128" stroke="rgba(100,80,180,0.14)" stroke-width="0.8"/>
+          <line x1="75" y1="132" x2="90" y2="132" stroke="rgba(100,80,180,0.14)" stroke-width="0.8"/>
+          <line x1="75" y1="136" x2="90" y2="136" stroke="rgba(100,80,180,0.12)" stroke-width="0.8"/>
+          <line x1="75" y1="140" x2="90" y2="140" stroke="rgba(100,80,180,0.1)" stroke-width="0.8"/>
+
+          <!-- Pen on notebook -->
+          <rect x="91" y="116" width="2.5" height="34" rx="1.2"
+            fill="rgba(200,180,255,0.5)" transform="rotate(8 91 116)"/>
+          <polygon points="94,149 91,149 92.5,153"
+            fill="rgba(180,150,100,0.45)" transform="rotate(8 91 116)"/>
+        </g>
+
+        <!-- ── SMALL PLANT (far left corner) ── -->
+        <g filter="url(#d-shadow)">
+          <!-- Pot -->
+          <path d="M4 148 L8 136 L22 136 L26 148 Z" fill="#1e1840" stroke="rgba(100,80,180,0.2)" stroke-width="0.5"/>
+          <rect x="6" y="134" width="18" height="3" rx="1" fill="#241e50"/>
+          <!-- Soil -->
+          <ellipse cx="15" cy="136" rx="9" ry="2.5" fill="#120e24"/>
+          <!-- Stems -->
+          <path d="M15 136 Q12 124 10 116" stroke="rgba(120,200,130,0.6)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path d="M15 136 Q16 120 18 112" stroke="rgba(100,190,120,0.55)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path d="M15 136 Q18 126 22 118" stroke="rgba(120,200,130,0.5)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <!-- Leaves -->
+          <ellipse cx="9" cy="114" rx="5" ry="3" fill="rgba(100,190,120,0.55)" transform="rotate(-30 9 114)"/>
+          <ellipse cx="18" cy="110" rx="6" ry="3" fill="rgba(120,200,130,0.5)" transform="rotate(20 18 110)"/>
+          <ellipse cx="23" cy="116" rx="5" ry="3" fill="rgba(100,180,110,0.5)" transform="rotate(45 23 116)"/>
+        </g>
+
+        <!-- ── SMALL DETAILS ── -->
+        <!-- Sticky note -->
+        <rect x="310" y="106" width="22" height="20" rx="1"
+          fill="rgba(200,180,80,0.12)" stroke="rgba(200,180,80,0.2)" stroke-width="0.5"/>
+        <line x1="313" y1="111" x2="329" y2="111" stroke="rgba(200,180,80,0.2)" stroke-width="0.8"/>
+        <line x1="313" y1="115" x2="325" y2="115" stroke="rgba(200,180,80,0.15)" stroke-width="0.8"/>
+        <line x1="313" y1="119" x2="327" y2="119" stroke="rgba(200,180,80,0.12)" stroke-width="0.8"/>
+
+        <!-- Eraser -->
+        <rect x="200" y="144" width="18" height="6" rx="2"
+          fill="rgba(255,160,180,0.18)" stroke="rgba(255,160,180,0.2)" stroke-width="0.5"/>
+      </svg>
+    </div>
+
+    <!-- Desk surface (in front of girl) -->
+    <div class="study-desk" style="position:absolute">
+      <div class="desk-top"></div>
+      <div class="desk-body"></div>
+    </div>
+
+    <!-- TOP — tagline + timer -->
+    <div class="study-top">
+      <div class="study-tagline">Her görev, <span>yıldızına</span><br>giden yolun bir parçası.</div>
+      <div class="study-subtitle" id="studyTaskName">Odaklan. Evreni inşa et.</div>
+      <div class="study-timer-big" id="timerDisplay">00:00</div>
+      <div class="study-task-pill">✦ <span id="sessionXPLabel">0 XP bu oturumda</span></div>
+    </div>
+
+    <!-- BOTTOM — sound mixer + controls -->
+    <div class="study-bottom">
+
+      <!-- Sound mixer -->
+      <div>
+        <div class="sound-section-title">Ambiyans</div>
+        <div class="sound-grid" id="soundGrid">
+          <!-- injected by JS -->
+        </div>
+      </div>
+
+      <!-- Master volume -->
+      <div class="vol-row" id="masterVolRow" style="display:none">
+        <span class="vol-label">🔊</span>
+        <input class="vol-slider" type="range" min="0" max="100" value="60" id="masterVol">
+      </div>
+
+      <!-- Controls -->
+      <div class="study-ctrl-row">
+        <button class="s-btn s-btn-ghost" id="btn-reset-timer">↺ Sıfırla</button>
+        <button class="s-btn s-btn-main" id="timerStartBtn">▶ Başlat</button>
+        <button class="s-btn s-btn-ghost" id="btn-end-study">← Çık</button>
+      </div>
+      <div class="study-deco-line"></div>
+
+    </div>
+
+  </div>
+
+  <!-- ── EXPLORE VIEW ── -->
+  <div id="view-explore" class="view">
+    <div class="view-header">
+      <button class="back-btn" id="back-explore">←</button>
+      <div class="view-title">🔭 Galaksileri Keşfet</div>
+    </div>
+    <div class="explore-body">
+      <div style="font-size:12px;color:var(--text-dim);text-align:center;padding:4px 0 8px">
+        Başka bir kullanıcının galaksisini görmek için kullanıcı adını yaz
+      </div>
+      <div class="explore-search-wrap">
+        <input class="explore-input" id="exploreInput" placeholder="kullanıcı adı..." autocomplete="off">
+        <button class="explore-btn" id="btn-search-galaxy">Ara</button>
+      </div>
+      <div id="exploreResult"></div>
+    </div>
+  </div>
+
+  <!-- ── STATS VIEW ── -->
+  <div id="view-stats" class="view">
+    <div class="view-header">
+      <button class="back-btn" id="back-stats">←</button>
+      <div class="view-title">İstatistikler</div>
+    </div>
+    <div class="stats-body" id="statsBody"></div>
+  </div>
+
+</div>
+
+<!-- XP Toast -->
+<div class="xp-toast" id="xpToast">
+  <div class="xp-toast-main" id="xpToastMain">+75 XP</div>
+  <div class="xp-toast-sub" id="xpToastSub">Yeni bir yıldız keşfedildi ✦</div>
+</div>
+
+<script type="module">
+// ── FIREBASE ──────────────────────────────────────────────────────────────────
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, setDoc, getDoc, updateDoc, serverTimestamp, collection, query, where, getDocs }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDbMhTtvrgir-JjEKK2MRmf-ae6NtylIB8",
+  authDomain: "astrapath-16640.firebaseapp.com",
+  projectId: "astrapath-16640",
+  storageBucket: "astrapath-16640.firebasestorage.app",
+  messagingSenderId: "928645583118",
+  appId: "1:928645583118:web:9e09cd4b41a3d46d3a475f"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let currentUser = null;
+let currentNickname = '';
+
+// ── AUTH FUNCTIONS ─────────────────────────────────────────────────────────────
+
+window.switchAuthTab = function(tab) {
+  document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+};
+
+window.doLogin = async function() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  const btn = document.getElementById('loginBtn');
+  errEl.style.display = 'none';
+  btn.disabled = true; btn.textContent = 'Giriş yapılıyor...';
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch(e) {
+    errEl.textContent = e.code === 'auth/invalid-credential' ? 'E-posta veya şifre hatalı.' : e.message;
+    errEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Galaksine Gir →';
+  }
+};
+
+window.doRegister = async function() {
+  const nick = document.getElementById('reg-nick').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pass = document.getElementById('reg-pass').value;
+  const errEl = document.getElementById('reg-error');
+  const btn = document.getElementById('registerBtn');
+  errEl.style.display = 'none';
+
+  if (!nick || nick.length < 3) { errEl.textContent = 'Kullanıcı adı en az 3 karakter olmalı.'; errEl.style.display='block'; return; }
+
+  btn.disabled = true; btn.textContent = 'Oluşturuluyor...';
+  try {
+    // Check nickname unique
+    const nickRef = doc(db, 'nicknames', nick);
+    const nickSnap = await getDoc(nickRef);
+    if (nickSnap.exists()) {
+      errEl.textContent = 'Bu kullanıcı adı alınmış, başka bir isim dene.';
+      errEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Evreni Başlat →';
+      return;
+    }
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    const uid = cred.user.uid;
+    const initState = { ...state, cats: DEFAULT_CATS, planets: {}, tasks: [], xp: 0, streak: 0 };
+    // Save user doc
+    await setDoc(doc(db, 'users', uid), { nickname: nick, email, createdAt: serverTimestamp(), state: initState });
+    // Reserve nickname
+    await setDoc(nickRef, { uid });
+  } catch(e) {
+    errEl.textContent = e.code === 'auth/email-already-in-use' ? 'Bu e-posta zaten kayıtlı.' : e.message;
+    errEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Evreni Başlat →';
+  }
+};
+
+window.showUserMenu = function() {
+  if (document.getElementById('userMenuEl')) { document.getElementById('userMenuEl').remove(); return; }
+  const menu = document.createElement('div');
+  menu.id = 'userMenuEl';
+  menu.style.cssText = `
+    position:fixed;top:80px;right:20px;z-index:500;
+    background:linear-gradient(135deg,#0f1a35,#080d1e);
+    border:1px solid rgba(124,108,252,0.25);border-radius:14px;
+    padding:8px;min-width:160px;box-shadow:0 10px 30px rgba(0,0,0,0.5);
+  `;
+  menu.innerHTML = `
+    <div style="padding:8px 12px;font-size:12px;color:var(--text-dim);border-bottom:1px solid rgba(124,108,252,0.1);margin-bottom:4px">
+      @${currentNickname}
+    </div>
+    <button onclick="doLogout()" style="
+      width:100%;text-align:left;padding:10px 12px;
+      background:transparent;border:none;color:var(--text);
+      font-family:'Space Grotesk',sans-serif;font-size:13px;cursor:pointer;border-radius:8px;
+    " onmouseenter="this.style.background='rgba(255,80,80,0.1)'"
+       onmouseleave="this.style.background='transparent'">
+      🚪 Çıkış Yap
+    </button>
+  `;
+  document.body.appendChild(menu);
+  setTimeout(() => document.addEventListener('click', function h(e) {
+    if (!menu.contains(e.target) && e.target.id !== 'userPill') { menu.remove(); document.removeEventListener('click', h); }
+  }), 100);
+};
+
+window.doLogout = async function() {
+  document.getElementById('userMenuEl')?.remove();
+  await signOut(auth);
+};
+
+// ── FIRESTORE SAVE/LOAD ────────────────────────────────────────────────────────
+
+async function saveToFirestore() {
+  if (!currentUser) return;
+  try {
+    await updateDoc(doc(db, 'users', currentUser.uid), { state, updatedAt: serverTimestamp() });
+  } catch(e) { console.warn('Save error:', e); }
+}
+
+async function loadFromFirestore(uid) {
+  const snap = await getDoc(doc(db, 'users', uid));
+  if (snap.exists()) {
+    const data = snap.data();
+    currentNickname = data.nickname || '';
+    const saved = data.state || {};
+    state = { ...state, ...saved };
+    if (!state.cats || state.cats.length === 0) state.cats = DEFAULT_CATS;
+    if (!state.planets) state.planets = {};
+  }
+}
+
+// Override save to also push to Firestore
+window._localSave = save;
+window.save = function() {
+  _localSave();
+  saveToFirestore();
+};
+
+// ── AUTH STATE LISTENER ────────────────────────────────────────────────────────
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUser = user;
+    await loadFromFirestore(user.uid);
+    // Update user pill
+    document.getElementById('userAvatar').textContent = currentNickname.charAt(0).toUpperCase();
+    document.getElementById('userNickname').textContent = '@' + currentNickname;
+    // Show galaxy
+    document.getElementById('view-auth').style.display = 'none';
+    document.getElementById('view-auth').classList.remove('active');
+    showView('galaxy');
+    updateHUD();
+    resize();
+    updateCanvas();
+  } else {
+    currentUser = null;
+    currentNickname = '';
+    // Stop everything
+    stopAllSounds && stopAllSounds();
+    if (wAnimFrame) { cancelAnimationFrame(wAnimFrame); wAnimFrame = null; }
+    // Show auth
+    document.querySelectorAll('.view').forEach(v => { v.classList.remove('active'); v.style.display = ''; });
+    document.getElementById('view-auth').classList.add('active');
+    document.getElementById('view-auth').style.display = 'flex';
+    // Reset state
+    state = { xp:0, tasks:[], cats:[...DEFAULT_CATS], streak:0, lastActive:null, stars:[], planets:{} };
+    // Init canvas on auth screen
+    resize();
+    updateCanvas();
+  }
+});
+
+// ── GALAXY EXPLORE ─────────────────────────────────────────────────────────────
+
+window.searchGalaxy = async function() {
+  const nick = document.getElementById('exploreInput').value.trim().toLowerCase();
+  const resultEl = document.getElementById('exploreResult');
+  if (!nick) return;
+  resultEl.innerHTML = `<div style="text-align:center;color:var(--text-dim);padding:20px;font-size:12px">🔭 Aranıyor...</div>`;
+
+  try {
+    const nickSnap = await getDoc(doc(db, 'nicknames', nick));
+    if (!nickSnap.exists()) {
+      resultEl.innerHTML = `<div style="text-align:center;color:var(--text-dim);padding:20px;font-size:12px">Bu kullanıcı adı bulunamadı.</div>`;
+      return;
+    }
+    const uid = nickSnap.data().uid;
+    const userSnap = await getDoc(doc(db, 'users', uid));
+    if (!userSnap.exists()) { resultEl.innerHTML = `<div style="color:var(--text-dim);padding:20px;font-size:12px">Kullanıcı bulunamadı.</div>`; return; }
+
+    const data = userSnap.data();
+    const uState = data.state || {};
+    const uCats = uState.cats || DEFAULT_CATS;
+    const uPlanets = uState.planets || {};
+    const uXP = uState.xp || 0;
+    const uLevel = calcLevel(uXP);
+    const doneTasks = (uState.tasks || []).filter(t => t.done).length;
+
+    let planetsHTML = uCats.map(cat => {
+      const xp = uPlanets[cat.id] || 0;
+      const pct = Math.min(100, (xp / 2000) * 100);
+      return `
+        <div class="explore-planet-row">
+          <div style="width:14px;height:14px;border-radius:50%;background:${cat.color};box-shadow:0 0 8px ${cat.color}88;flex-shrink:0"></div>
+          <div style="flex:1">
+            <div style="font-size:13px;color:var(--star)">${cat.emoji} ${cat.planet}</div>
+            <div style="font-size:10px;color:var(--text-dim)">${cat.name}</div>
+            <div style="height:3px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:4px">
+              <div style="height:100%;width:${pct}%;background:${cat.color};border-radius:2px"></div>
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--accent2);font-family:'Space Grotesk',sans-serif;font-weight:600">${xp} XP</div>
+        </div>`;
+    }).join('');
+
+    resultEl.innerHTML = `
+      <div class="explore-result">
+        <div class="explore-username">🌌 @${data.nickname}</div>
+        <div class="explore-meta">Seviye ${uLevel} · ${uXP.toLocaleString()} XP · ${doneTasks} görev tamamlandı</div>
+        <div class="explore-planets">${planetsHTML}</div>
+      </div>`;
+  } catch(e) {
+    resultEl.innerHTML = `<div style="color:var(--text-dim);padding:20px;font-size:12px">Bir hata oluştu: ${e.message}</div>`;
+  }
+};
+
+// ── PLANET SELECT for study session ───────────────────────────────────────────
+
+let studyPlanetId = null;
+
+window.openPlanetSelect = function(cb) {
+  document.getElementById('planetSelectModal')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'planetSelectModal';
+  modal.className = 'planet-select-modal';
+
+  const planetsHTML = state.cats.map(cat => `
+    <div class="planet-select-item" data-pid="${cat.id}"
+      onclick="selectStudyPlanet('${cat.id}', this)">
+      <div class="planet-select-dot" style="background:${cat.color};box-shadow:0 0 6px ${cat.color}88"></div>
+      <div class="planet-select-info">
+        <div class="planet-select-name">${cat.emoji} ${cat.planet}</div>
+        <div class="planet-select-cat">${cat.name}</div>
+      </div>
+    </div>
+  `).join('');
+
+  modal.innerHTML = `
+    <div class="planet-select-sheet">
+      <div class="sheet-title">Hangi gezegen için çalışıyorsun?</div>
+      <div class="sheet-sub">Oturum XP'si seçilen gezegene yansır</div>
+      <div class="planet-select-grid">${planetsHTML}</div>
+      <button class="planet-select-btn" onclick="confirmPlanetSelect()">Çalışmaya Başla →</button>
+    </div>
+  `;
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+  document.body.appendChild(modal);
+  studyPlanetId = state.cats[0]?.id || null;
+  document.querySelector(`[data-pid="${studyPlanetId}"]`)?.classList.add('selected');
+};
+
+window.selectStudyPlanet = function(id, el) {
+  studyPlanetId = id;
+  document.querySelectorAll('.planet-select-item').forEach(i => i.classList.remove('selected'));
+  el.classList.add('selected');
+};
+
+window.confirmPlanetSelect = function() {
+  document.getElementById('planetSelectModal')?.remove();
+  _startStudySession(studyPlanetId);
+};
+
+// ── DATA ──────────────────────────────────────────────────────────────────────
+
+const DEFAULT_CATS = [
+  { id:'tus',     name:'TUS',        color:'#f38ba8', planet:'Mars',    emoji:'🔴' },
+  { id:'ing',     name:'İngilizce',  color:'#89b4fa', planet:'Dünya',   emoji:'🔵' },
+  { id:'yazilim', name:'Yazılım',    color:'#cba6f7', planet:'Satürn',  emoji:'🪐' },
+  { id:'kitap',   name:'Kitap',      color:'#a6e3a1', planet:'Venüs',   emoji:'🟢' },
+  { id:'spor',    name:'Spor',       color:'#fab387', planet:'Jüpiter', emoji:'🟠' },
+  { id:'kisisel', name:'Kişisel',    color:'#f9e2af', planet:'Neptün',  emoji:'🔷' },
+];
+
+const LEVEL_THRESHOLDS = [0, 150, 400, 800, 1400, 2200, 3300, 4800, 6800, 9500, 13000, 18000];
+const LEVEL_NAMES = ['Stardust','Nebula Scout','Star Wanderer','Comet Rider','Asteroid Belt','Nova Pilot','Stellar',
+                     'Cosmic Voyager','Galaxy Shaper','Supernova','Interstellar','Universe Builder'];
+
+let state = {
+  xp: 0,
+  tasks: [],
+  cats: DEFAULT_CATS,
+  streak: 0,
+  lastActive: null,
+  stars: [],
+  planets: {},   // catId → xp
+};
+
+function load() {
+  try {
+    const s = localStorage.getItem('cp_state');
+    if (s) state = { ...state, ...JSON.parse(s) };
+  } catch(e) {}
+}
+function save() {
+  localStorage.setItem('cp_state', JSON.stringify(state));
+}
+
+load();
+
+// ── XP / LEVEL ────────────────────────────────────────────────────────────────
+
+function calcLevel(xp) {
+  for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--)
+    if (xp >= LEVEL_THRESHOLDS[i]) return Math.min(i + 1, LEVEL_THRESHOLDS.length - 1);
+  return 1;
+}
+
+function updateHUD() {
+  const lvl = calcLevel(state.xp);
+  const curT = LEVEL_THRESHOLDS[lvl - 1] || 0;
+  const nxtT = LEVEL_THRESHOLDS[lvl] || LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1];
+  const pct = lvl >= LEVEL_NAMES.length ? 100 : Math.min(100, ((state.xp - curT) / (nxtT - curT)) * 100);
+
+  document.getElementById('lvlNum').textContent = lvl;
+  document.getElementById('lvlTitle').textContent = LEVEL_NAMES[lvl - 1] || 'Universe Builder';
+  document.getElementById('xpFill').style.width = pct + '%';
+  document.getElementById('xpCur').textContent = state.xp.toLocaleString();
+  document.getElementById('xpNxt').textContent = nxtT.toLocaleString();
+  document.getElementById('totalXpVal').textContent = state.xp.toLocaleString();
+  document.getElementById('streakVal').textContent = state.streak;
+
+  // Today
+  const todayTasks = getTodayTasks();
+  const doneTasks = todayTasks.filter(t => t.done);
+  document.getElementById('todayDone').textContent = doneTasks.length;
+  document.getElementById('todayXP').textContent = doneTasks.reduce((s, t) => s + t.xp, 0);
+  document.getElementById('todayTotal').textContent = todayTasks.length;
+
+  renderTaskList();
+}
+
+function getTodayTasks() {
+  const today = new Date().toDateString();
+  return state.tasks.filter(t => new Date(t.date).toDateString() === today);
+}
+
+// ── TASK LIST ────────────────────────────────────────────────────────────────
+
+function renderTaskList() {
+  const list = document.getElementById('taskListMini');
+  const tasks = getTodayTasks();
+  document.getElementById('emptyMsg').style.display = tasks.length ? 'none' : 'block';
+
+  list.querySelectorAll('.task-mini').forEach(el => el.remove());
+
+  tasks.forEach(task => {
+    const cat = state.cats.find(c => c.id === task.catId) || state.cats[0];
+    const el = document.createElement('div');
+    el.className = 'task-mini' + (task.done ? ' done' : '');
+    el.innerHTML = `
+      <div class="task-check">${task.done ? '✓' : ''}</div>
+      <div class="cat-dot" style="background:${cat.color}"></div>
+      <div class="task-name-mini">${task.name}</div>
+      <div class="task-xp-mini">+${task.xp}</div>
+    `;
+    if (!task.done) el.onclick = () => completeTask(task.id, el);
+    list.appendChild(el);
+  });
+}
+
+// ── COMPLETE TASK ─────────────────────────────────────────────────────────────
+
+function deleteTask(id) {
+  state.tasks = state.tasks.filter(t => t.id !== id);
+  save();
+  updateHUD();
+}
+
+function completeTask(id, el) {
+  const task = state.tasks.find(t => t.id === id);
+  if (!task || task.done) return;
+  task.done = true;
+
+  // Add XP
+  state.xp += task.xp;
+
+  // Planet XP
+  if (!state.planets[task.catId]) state.planets[task.catId] = 0;
+  state.planets[task.catId] += task.xp;
+
+  // Streak
+  checkStreak();
+
+  save();
+  updateHUD();
+  updateCanvas();
+  showXPToast(task.xp, task.name);
+  spawnParticles(el);
+}
+
+function checkStreak() {
+  const today = new Date().toDateString();
+  if (state.lastActive === today) return;
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  if (state.lastActive === yesterday) state.streak++;
+  else if (state.lastActive !== today) state.streak = 1;
+  state.lastActive = today;
+}
+
+// ── ADD TASK ──────────────────────────────────────────────────────────────────
+
+let selectedCat = DEFAULT_CATS[0].id;
+let selectedXP = 75;
+
+function initAddForm() {
+  const grid = document.getElementById('catGrid');
+  grid.innerHTML = '';
+  state.cats.forEach(cat => {
+    const chip = document.createElement('div');
+    chip.className = 'cat-chip' + (cat.id === selectedCat ? ' selected' : '');
+    chip.innerHTML = `<div style="width:8px;height:8px;border-radius:50%;background:${cat.color}"></div>${cat.name}`;
+    chip.onclick = () => {
+      selectedCat = cat.id;
+      grid.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+    };
+    grid.appendChild(chip);
+  });
+
+  document.querySelectorAll('.xp-preset').forEach(btn => {
+    btn.onclick = () => {
+      selectedXP = parseInt(btn.dataset.xp);
+      document.getElementById('customXP').value = selectedXP;
+      document.querySelectorAll('.xp-preset').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    };
+  });
+
+  document.getElementById('customXP').oninput = (e) => {
+    selectedXP = parseInt(e.target.value) || 75;
+    document.querySelectorAll('.xp-preset').forEach(b => b.classList.remove('selected'));
+  };
+}
+
+function addTask() {
+  const name = document.getElementById('taskName').value.trim();
+  if (!name) { document.getElementById('taskName').focus(); return; }
+  const xp = parseInt(document.getElementById('customXP').value) || 75;
+  const note = document.getElementById('taskNote').value.trim();
+
+  state.tasks.push({
+    id: Date.now(),
+    name,
+    catId: selectedCat,
+    xp,
+    note,
+    done: false,
+    date: new Date().toISOString(),
+  });
+
+  save();
+  document.getElementById('taskName').value = '';
+  document.getElementById('taskNote').value = '';
+  updateHUD();
+  showView('galaxy');
+}
+
+// ── PLANETS VIEW ──────────────────────────────────────────────────────────────
+
+function renderPlanets() {
+  const body = document.getElementById('planetsBody');
+  body.innerHTML = '';
+
+  // "Gezegen Ekle" butonu
+  const addBtn = document.createElement('div');
+  addBtn.className = 'planet-card';
+  addBtn.style.cssText = 'cursor:pointer;border-style:dashed;justify-content:center;gap:10px;opacity:0.6;transition:opacity 0.2s;';
+  addBtn.onmouseenter = () => addBtn.style.opacity = '1';
+  addBtn.onmouseleave = () => addBtn.style.opacity = '0.6';
+  addBtn.innerHTML = `
+    <div style="font-size:22px">🪐</div>
+    <div>
+      <div class="planet-name">Yeni Gezegen Ekle</div>
+      <div class="planet-cat" style="font-size:11px">Kendi kategorini oluştur</div>
+    </div>
+    <div style="font-size:20px;margin-left:auto;color:var(--accent2)">+</div>
+  `;
+  addBtn.onclick = () => openAddPlanetModal();
+  body.appendChild(addBtn);
+
+  state.cats.forEach(cat => {
+    const catXP = state.planets[cat.id] || 0;
+    const maxXP = 2000;
+    const pct = Math.min(100, (catXP / maxXP) * 100);
+    const size = 28 + (pct / 100) * 24;
+
+    const card = document.createElement('div');
+    card.className = 'planet-card';
+    card.innerHTML = `
+      <div style="width:${size}px;height:${size}px;border-radius:50%;
+        background:radial-gradient(circle at 35% 30%, ${cat.color}cc, ${cat.color}44 50%, transparent);
+        box-shadow:0 0 20px ${cat.color}66;flex-shrink:0;transition:all 0.5s"></div>
+      <div class="planet-info">
+        <div class="planet-name">${cat.planet}</div>
+        <div class="planet-cat">${cat.emoji} ${cat.name}</div>
+        ${cat.desc ? `<div style="font-size:11px;color:var(--text-dim);margin-top:2px;font-style:italic">${cat.desc}</div>` : ''}
+        <div class="planet-bar-bg" style="margin-top:8px">
+          <div class="planet-bar-fill" style="width:${pct}%;background:${cat.color};box-shadow:0 0 8px ${cat.color}88"></div>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div class="planet-xp">${catXP} XP</div>
+        <button onclick="deletePlanet('${cat.id}')" style="
+          margin-top:8px;background:transparent;border:none;
+          color:rgba(255,80,80,0.4);font-size:12px;cursor:pointer;
+          padding:2px 6px;border-radius:6px;transition:color 0.2s;
+        " onmouseenter="this.style.color='rgba(255,80,80,0.9)'"
+          onmouseleave="this.style.color='rgba(255,80,80,0.4)'">✕</button>
+      </div>
+    `;
+    body.appendChild(card);
+  });
+}
+
+function deletePlanet(id) {
+  if (!confirm('Bu gezegeni silmek istediğine emin misin?')) return;
+  state.cats = state.cats.filter(c => c.id !== id);
+  delete state.planets[id];
+  save(); renderPlanets(); initStars();
+}
+
+// ── ADD PLANET MODAL ──────────────────────────────────────────────────────────
+
+function openAddPlanetModal() {
+  // Remove if exists
+  document.getElementById('addPlanetModal')?.remove();
+
+  const PLANET_COLORS = [
+    '#f38ba8','#89b4fa','#cba6f7','#a6e3a1','#fab387',
+    '#f9e2af','#94e2d5','#ff9ff3','#feca57','#48dbfb'
+  ];
+  const PLANET_EMOJIS = ['🔴','🔵','🟣','🟢','🟠','🟡','⚪','🩵','🩷','🌍'];
+
+  let selColor = PLANET_COLORS[Math.floor(Math.random()*PLANET_COLORS.length)];
+  let selEmoji = PLANET_EMOJIS[0];
+
+  const modal = document.createElement('div');
+  modal.id = 'addPlanetModal';
+  modal.style.cssText = `
+    position:fixed;inset:0;z-index:999;
+    background:rgba(4,6,15,0.88);backdrop-filter:blur(12px);
+    display:flex;align-items:center;justify-content:center;padding:20px;
+  `;
+  modal.innerHTML = `
+    <div style="
+      background:linear-gradient(135deg,#0f1a35,#080d1e);
+      border:1px solid rgba(124,108,252,0.25);border-radius:20px;
+      padding:28px;width:100%;max-width:360px;
+      box-shadow:0 20px 60px rgba(0,0,0,0.5);
+    ">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;color:var(--star)">🪐 Yeni Gezegen</div>
+        <button onclick="document.getElementById('addPlanetModal').remove()" style="
+          background:transparent;border:none;color:var(--text-dim);
+          font-size:20px;cursor:pointer;line-height:1;padding:4px;
+        ">✕</button>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px">
+
+        <div>
+          <div class="field-label" style="font-size:10px;color:var(--text-dim);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px">Gezegen Adı</div>
+          <input id="mp-planet" class="field-input" placeholder="örn. Merkür, Nova, Kepler-22b..." style="width:100%">
+        </div>
+
+        <div>
+          <div class="field-label" style="font-size:10px;color:var(--text-dim);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px">Kategori Adı</div>
+          <input id="mp-cat" class="field-input" placeholder="örn. TUS, Matematik, Gitar..." style="width:100%">
+        </div>
+
+        <div>
+          <div class="field-label" style="font-size:10px;color:var(--text-dim);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px">Açıklama (isteğe bağlı)</div>
+          <input id="mp-desc" class="field-input" placeholder="Bu gezegen ne için?" style="width:100%">
+        </div>
+
+        <div>
+          <div class="field-label" style="font-size:10px;color:var(--text-dim);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px">Renk</div>
+          <div id="mp-colors" style="display:flex;flex-wrap:wrap;gap:8px">
+            ${PLANET_COLORS.map(c => `
+              <div onclick="selectPlanetColor('${c}')" data-color="${c}" style="
+                width:28px;height:28px;border-radius:50%;background:${c};
+                cursor:pointer;border:2px solid ${c === selColor ? '#fff' : 'transparent'};
+                box-shadow:0 0 8px ${c}88;transition:border 0.15s;
+              "></div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div>
+          <div class="field-label" style="font-size:10px;color:var(--text-dim);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px">Emoji</div>
+          <div id="mp-emojis" style="display:flex;flex-wrap:wrap;gap:6px">
+            ${PLANET_EMOJIS.map(e => `
+              <div onclick="selectPlanetEmoji('${e}')" data-emoji="${e}" style="
+                width:34px;height:34px;border-radius:8px;font-size:18px;
+                display:flex;align-items:center;justify-content:center;cursor:pointer;
+                border:1px solid ${e === selEmoji ? 'rgba(124,108,252,0.6)' : 'rgba(124,108,252,0.15)'};
+                background:${e === selEmoji ? 'rgba(124,108,252,0.15)' : 'transparent'};
+                transition:all 0.15s;
+              ">${e}</div>
+            `).join('')}
+          </div>
+        </div>
+
+        <button onclick="submitAddPlanet()" style="
+          background:linear-gradient(135deg,var(--accent),var(--accent2));
+          border:none;border-radius:12px;padding:14px;
+          font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;
+          color:#fff;cursor:pointer;margin-top:4px;
+          box-shadow:0 6px 20px rgba(124,108,252,0.3);transition:all 0.2s;
+        " onmouseenter="this.style.transform='translateY(-1px)'"
+           onmouseleave="this.style.transform='translateY(0)'">
+          Galaksine Ekle →
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+  document.getElementById('mp-planet').focus();
+}
+
+function selectPlanetColor(color) {
+  document.querySelectorAll('#mp-colors [data-color]').forEach(el => {
+    el.style.border = `2px solid ${el.dataset.color === color ? '#fff' : 'transparent'}`;
+  });
+}
+
+function selectPlanetEmoji(emoji) {
+  document.querySelectorAll('#mp-emojis [data-emoji]').forEach(el => {
+    const active = el.dataset.emoji === emoji;
+    el.style.border = `1px solid ${active ? 'rgba(124,108,252,0.6)' : 'rgba(124,108,252,0.15)'}`;
+    el.style.background = active ? 'rgba(124,108,252,0.15)' : 'transparent';
+  });
+}
+
+function submitAddPlanet() {
+  const planet = document.getElementById('mp-planet').value.trim();
+  const cat = document.getElementById('mp-cat').value.trim();
+  const desc = document.getElementById('mp-desc').value.trim();
+
+  if (!planet || !cat) {
+    document.getElementById(planet ? 'mp-cat' : 'mp-planet').focus();
+    return;
+  }
+
+  const selColorEl = document.querySelector('#mp-colors [data-color]');
+  const activeColor = [...document.querySelectorAll('#mp-colors [data-color]')]
+    .find(el => el.style.border.includes('#fff'))?.dataset.color || '#cba6f7';
+
+  const activeEmoji = [...document.querySelectorAll('#mp-emojis [data-emoji]')]
+    .find(el => el.style.background.includes('0.15'))?.dataset.emoji || '🪐';
+
+  const id = 'cat_' + Date.now();
+  state.cats.push({ id, name: cat, planet, color: activeColor, emoji: activeEmoji, desc });
+  state.planets[id] = 0;
+  save();
+
+  document.getElementById('addPlanetModal').remove();
+  renderPlanets();
+  initStars();
+  showXPToast(0, `${activeEmoji} ${planet} galaksine katıldı!`);
+}
+
+// ── STATS VIEW ────────────────────────────────────────────────────────────────
+
+function renderStats() {
+  const body = document.getElementById('statsBody');
+  const done = state.tasks.filter(t => t.done);
+  const totalXP = state.xp;
+  const lvl = calcLevel(state.xp);
+
+  // Best day
+  const byDay = {};
+  done.forEach(t => {
+    const d = new Date(t.date).toDateString();
+    byDay[d] = (byDay[d] || 0) + t.xp;
+  });
+  const bestDay = Object.entries(byDay).sort((a,b)=>b[1]-a[1])[0];
+
+  // Best cat
+  const byCat = {};
+  done.forEach(t => { byCat[t.catId] = (byCat[t.catId] || 0) + t.xp; });
+  const bestCatId = Object.entries(byCat).sort((a,b)=>b[1]-a[1])[0];
+  const bestCat = bestCatId ? state.cats.find(c=>c.id===bestCatId[0]) : null;
+
+  body.innerHTML = `
+    <div class="stat-block">
+      <div class="stat-block-title">Seviye İlerlemesi</div>
+      <div class="big-stat">${lvl}</div>
+      <div class="big-stat-sub">${LEVEL_NAMES[lvl-1]} · ${totalXP.toLocaleString()} toplam XP</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-block-title">Genel Bakış</div>
+      <div class="stats-grid">
+        <div class="stat-mini">
+          <div class="stat-mini-val">${done.length}</div>
+          <div class="stat-mini-label">Tamamlanan</div>
+        </div>
+        <div class="stat-mini">
+          <div class="stat-mini-val">${state.streak}</div>
+          <div class="stat-mini-label">Günlük Seri 🔥</div>
+        </div>
+        <div class="stat-mini">
+          <div class="stat-mini-val">${Object.keys(byDay).length}</div>
+          <div class="stat-mini-label">Aktif Gün</div>
+        </div>
+        <div class="stat-mini">
+          <div class="stat-mini-val">${state.tasks.length}</div>
+          <div class="stat-mini-label">Toplam Görev</div>
+        </div>
+      </div>
+    </div>
+    ${bestDay ? `<div class="stat-block">
+      <div class="stat-block-title">En İyi Gün</div>
+      <div class="big-stat">${bestDay[1]} XP</div>
+      <div class="big-stat-sub">${bestDay[0]}</div>
+    </div>` : ''}
+    ${bestCat ? `<div class="stat-block">
+      <div class="stat-block-title">En Çok Çalışılan</div>
+      <div class="big-stat">${bestCat.emoji} ${bestCat.name}</div>
+      <div class="big-stat-sub">${bestCatId[1]} XP · ${bestCat.planet}</div>
+    </div>` : ''}
+  `;
+}
+
+// ── VIEW NAVIGATION ───────────────────────────────────────────────────────────
+
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  if (name === 'add') initAddForm();
+  if (name === 'planets') renderPlanets();
+  if (name === 'stats') renderStats();
+}
+
+// ── PARTICLES ─────────────────────────────────────────────────────────────────
+
+function spawnParticles(el) {
+  const rect = el ? el.getBoundingClientRect() : { left: window.innerWidth/2, top: window.innerHeight/2, width: 0, height: 0 };
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const colors = ['#cba6f7', '#89b4fa', '#f9e2af', '#a6e3a1', '#f38ba8'];
+
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = 3 + Math.random() * 4;
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 60 + Math.random() * 100;
+    p.style.cssText = `
+      width:${size}px;height:${size}px;
+      left:${cx}px;top:${cy}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      --dx:${Math.cos(angle)*dist}px;
+      --dy:${Math.sin(angle)*dist}px;
+      animation-delay:${Math.random()*0.2}s;
+      animation-duration:${0.8+Math.random()*0.7}s;
+    `;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 2000);
+  }
+}
+
+function showXPToast(xp, name) {
+  const t = document.getElementById('xpToast');
+  document.getElementById('xpToastMain').textContent = '+' + xp + ' XP';
+  document.getElementById('xpToastSub').textContent = name;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+// ── CANVAS UNIVERSE ───────────────────────────────────────────────────────────
+
+const canvas = document.getElementById('universe');
+const ctx = canvas.getContext('2d');
+let W, H, stars2d = [], nebula = { r: 0 }, ship = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5, angle: 0 };
+let animFrame;
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  initStars();
+}
+
+function initStars() {
+  const count = Math.min(200 + state.xp / 5, 600);
+  stars2d = [];
+  for (let i = 0; i < count; i++) {
+    stars2d.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.4,
+      speed: 0.05 + Math.random() * 0.1,
+      opacity: 0.2 + Math.random() * 0.7,
+      flicker: Math.random() * Math.PI * 2,
+    });
+  }
+}
+
+function drawNebula(time) {
+  const lvl = calcLevel(state.xp);
+  const baseR = 80 + lvl * 12;
+  const opacity = 0.04 + lvl * 0.006;
+  const cx = W * 0.5, cy = H * 0.45;
+
+  const colors = [
+    `rgba(124,108,252,${opacity})`,
+    `rgba(192,132,252,${opacity * 0.7})`,
+    `rgba(137,180,250,${opacity * 0.5})`,
+  ];
+
+  [1.4, 1, 0.6].forEach((scale, i) => {
+    const grad = ctx.createRadialGradient(
+      cx + Math.sin(time * 0.0003 + i) * 20,
+      cy + Math.cos(time * 0.0002 + i) * 15,
+      0,
+      cx, cy, baseR * scale
+    );
+    grad.addColorStop(0, colors[i]);
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(cx, cy, baseR * scale * 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+function drawShip(time) {
+  // Drift
+  ship.x += (ship.tx - ship.x) * 0.002;
+  ship.y += (ship.ty - ship.y) * 0.002;
+  if (Math.random() < 0.003) { ship.tx = 0.3 + Math.random() * 0.4; ship.ty = 0.3 + Math.random() * 0.4; }
+
+  const sx = ship.x * W;
+  const sy = ship.y * H;
+
+  ctx.save();
+  ctx.translate(sx, sy);
+  const ang = Math.atan2(ship.ty * H - sy, ship.tx * W - sx);
+  ctx.rotate(ang + Math.PI / 2);
+
+  // Engine glow
+  const pulse = 0.6 + 0.4 * Math.sin(time * 0.005);
+  const glow = ctx.createRadialGradient(0, 10, 0, 0, 10, 18);
+  glow.addColorStop(0, `rgba(137,180,250,${0.5 * pulse})`);
+  glow.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(0, 10, 18, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Ship body
+  ctx.fillStyle = 'rgba(205,214,244,0.9)';
+  ctx.beginPath();
+  ctx.moveTo(0, -12);
+  ctx.lineTo(7, 8);
+  ctx.lineTo(0, 4);
+  ctx.lineTo(-7, 8);
+  ctx.closePath();
+  ctx.fill();
+
+  // Cockpit
+  ctx.fillStyle = 'rgba(137,180,250,0.8)';
+  ctx.beginPath();
+  ctx.arc(0, -4, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawPlanetOrbs(time) {
+  const cx = W * 0.5, cy = H * 0.45;
+  state.cats.forEach((cat, i) => {
+    const catXP = state.planets[cat.id] || 0;
+    if (catXP === 0) return;
+
+    const angle = (i / state.cats.length) * Math.PI * 2 + time * 0.0001 * (i % 2 === 0 ? 1 : -1);
+    const orbitR = 100 + i * 35;
+    const px = cx + Math.cos(angle) * orbitR;
+    const py = cy + Math.sin(angle) * orbitR * 0.38;
+    const size = 4 + Math.min(catXP / 200, 14);
+
+    // Orbit ring (faint)
+    ctx.strokeStyle = `rgba(255,255,255,0.04)`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(cx, cy, orbitR, orbitR * 0.38, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Planet
+    const grad = ctx.createRadialGradient(px - size * 0.3, py - size * 0.3, 0, px, py, size);
+    grad.addColorStop(0, cat.color + 'ff');
+    grad.addColorStop(1, cat.color + '44');
+    ctx.fillStyle = grad;
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = cat.color;
+    ctx.beginPath();
+    ctx.arc(px, py, size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  });
+}
+
+function updateCanvas(time) {
+  ctx.clearRect(0, 0, W, H);
+
+  // Deep space gradient
+  const bg = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H));
+  bg.addColorStop(0, '#0a0f23');
+  bg.addColorStop(0.5, '#05080f');
+  bg.addColorStop(1, '#020408');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  const t = time || performance.now();
+
+  // Stars
+  stars2d.forEach(s => {
+    s.flicker += 0.01;
+    const op = s.opacity * (0.7 + 0.3 * Math.sin(s.flicker));
+    ctx.fillStyle = `rgba(232,228,255,${op})`;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  drawNebula(t);
+  drawPlanetOrbs(t);
+  drawShip(t);
+
+  animFrame = requestAnimationFrame(updateCanvas);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+
+window.addEventListener('resize', resize);
+resize();
+updateHUD();
+updateCanvas();
+
+// Enter key for task
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('view-add').classList.contains('active')) {
+    addTask();
+  }
+});
+// ── PLANET COUNT ──────────────────────────────────────────────────────────────
+
+let visiblePlanetCount = parseInt(localStorage.getItem('cp_planetCount') || '6');
+
+function changePlanetCount(delta) {
+  visiblePlanetCount = Math.max(1, Math.min(12, visiblePlanetCount + delta));
+  localStorage.setItem('cp_planetCount', visiblePlanetCount);
+  document.getElementById('planetCountVal').textContent = visiblePlanetCount;
+  initStars(); // re-init so planet count updates on canvas too
+}
+
+// ── WINDOW CANVAS (mini space inside the round window) ────────────────────────
+
+let wCanvas, wCtx, wW, wH, wStars = [], wPlanets = [], wNebAngle = 0;
+let wAnimFrame;
+
+function initWindowCanvas() {
+  wCanvas = document.getElementById('windowCanvas');
+  if (!wCanvas) return;
+  wCtx = wCanvas.getContext('2d');
+  wCanvas.width = wCanvas.offsetWidth * devicePixelRatio;
+  wCanvas.height = wCanvas.offsetHeight * devicePixelRatio;
+  wCtx.scale(devicePixelRatio, devicePixelRatio);
+  wW = wCanvas.offsetWidth;
+  wH = wCanvas.offsetHeight;
+
+  // Stars inside window
+  wStars = [];
+  for (let i = 0; i < 220; i++) {
+    wStars.push({
+      x: Math.random() * wW,
+      y: Math.random() * wH,
+      r: Math.random() * 1.5,
+      op: 0.2 + Math.random() * 0.8,
+      flicker: Math.random() * Math.PI * 2,
+      speed: 0.005 + Math.random() * 0.015
+    });
+  }
+
+  // Planets inside window
+  const planetDefs = [
+    { color:'#c0a0ff', r:28, ox:0.22, oy:0.28, orbit:0.18, speed:0.0004, rings:true },
+    { color:'#ff8fa0', r:16, ox:0.75, oy:0.2,  orbit:0.12, speed:0.0007, rings:false },
+    { color:'#80c8ff', r:12, ox:0.15, oy:0.65, orbit:0.08, speed:0.0011, rings:false },
+    { color:'#a0ffc8', r:8,  ox:0.82, oy:0.72, orbit:0.07, speed:0.0014, rings:false },
+    { color:'#ffd080', r:20, ox:0.55, oy:0.55, orbit:0.06, speed:0.0006, rings:false },
+    { color:'#d0a0ff', r:6,  ox:0.4,  oy:0.15, orbit:0.05, speed:0.002,  rings:false },
+  ];
+  wPlanets = planetDefs.map(p => ({ ...p, angle: Math.random() * Math.PI * 2 }));
+
+  if (wAnimFrame) cancelAnimationFrame(wAnimFrame);
+  animateWindow();
+}
+
+function animateWindow(t) {
+  if (!wCtx) return;
+  t = t || performance.now();
+
+  // Deep space bg
+  wCtx.clearRect(0, 0, wW, wH);
+  const bg = wCtx.createRadialGradient(wW*0.5, wH*0.45, 0, wW*0.5, wH*0.5, wW*0.65);
+  bg.addColorStop(0, '#0e0a28');
+  bg.addColorStop(0.5, '#080520');
+  bg.addColorStop(1, '#040310');
+  wCtx.fillStyle = bg;
+  wCtx.fillRect(0, 0, wW, wH);
+
+  // Nebula
+  wNebAngle += 0.0003;
+  const nebColors = [
+    [80, 60, 180, 0.07],
+    [140, 80, 200, 0.05],
+    [60, 100, 200, 0.04],
+  ];
+  nebColors.forEach(([r,g,b,a], i) => {
+    const nx = wW * (0.4 + 0.2 * Math.sin(wNebAngle + i));
+    const ny = wH * (0.45 + 0.1 * Math.cos(wNebAngle * 0.7 + i));
+    const gr = wCtx.createRadialGradient(nx, ny, 0, nx, ny, wW * (0.35 + i * 0.05));
+    gr.addColorStop(0, `rgba(${r},${g},${b},${a})`);
+    gr.addColorStop(1, 'transparent');
+    wCtx.fillStyle = gr;
+    wCtx.beginPath();
+    wCtx.arc(nx, ny, wW * (0.5 + i * 0.05), 0, Math.PI * 2);
+    wCtx.fill();
+  });
+
+  // Galaxy spiral hint
+  wCtx.save();
+  wCtx.translate(wW * 0.55, wH * 0.5);
+  for (let arm = 0; arm < 2; arm++) {
+    for (let i = 0; i < 60; i++) {
+      const ang = (i / 60) * Math.PI * 3 + arm * Math.PI + wNebAngle * 0.2;
+      const dist = (i / 60) * wW * 0.28;
+      const px = Math.cos(ang) * dist;
+      const py = Math.sin(ang) * dist * 0.4;
+      const op = (1 - i / 60) * 0.12;
+      wCtx.fillStyle = `rgba(160,140,255,${op})`;
+      wCtx.beginPath();
+      wCtx.arc(px, py, 1.2, 0, Math.PI * 2);
+      wCtx.fill();
+    }
+  }
+  wCtx.restore();
+
+  // Stars
+  wStars.forEach(s => {
+    s.flicker += s.speed;
+    const op = s.op * (0.6 + 0.4 * Math.sin(s.flicker));
+    wCtx.fillStyle = `rgba(220,215,255,${op})`;
+    wCtx.beginPath();
+    wCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    wCtx.fill();
+  });
+
+  // Planets (animated, orbiting slowly)
+  wPlanets.forEach(p => {
+    p.angle += p.speed;
+    const cx = wW * p.ox + Math.cos(p.angle) * wW * p.orbit;
+    const cy = wH * p.oy + Math.sin(p.angle) * wH * p.orbit * 0.5;
+
+    // Glow
+    const glow = wCtx.createRadialGradient(cx, cy, 0, cx, cy, p.r * 2.5);
+    glow.addColorStop(0, p.color + '33');
+    glow.addColorStop(1, 'transparent');
+    wCtx.fillStyle = glow;
+    wCtx.beginPath();
+    wCtx.arc(cx, cy, p.r * 2.5, 0, Math.PI * 2);
+    wCtx.fill();
+
+    // Planet body
+    const grad = wCtx.createRadialGradient(cx - p.r*0.3, cy - p.r*0.3, 0, cx, cy, p.r);
+    grad.addColorStop(0, p.color + 'ff');
+    grad.addColorStop(0.6, p.color + 'bb');
+    grad.addColorStop(1, p.color + '44');
+    wCtx.fillStyle = grad;
+    wCtx.shadowBlur = 10;
+    wCtx.shadowColor = p.color;
+    wCtx.beginPath();
+    wCtx.arc(cx, cy, p.r, 0, Math.PI * 2);
+    wCtx.fill();
+    wCtx.shadowBlur = 0;
+
+    // Rings (Saturn-like)
+    if (p.rings) {
+      wCtx.save();
+      wCtx.translate(cx, cy);
+      wCtx.scale(1, 0.35);
+      wCtx.strokeStyle = p.color + '55';
+      wCtx.lineWidth = 3;
+      wCtx.beginPath();
+      wCtx.arc(0, 0, p.r * 1.7, 0, Math.PI * 2);
+      wCtx.stroke();
+      wCtx.strokeStyle = p.color + '30';
+      wCtx.lineWidth = 2;
+      wCtx.beginPath();
+      wCtx.arc(0, 0, p.r * 2.1, 0, Math.PI * 2);
+      wCtx.stroke();
+      wCtx.restore();
+    }
+  });
+
+  // Shooting star (occasional)
+  if (Math.random() < 0.003) spawnShootingStar();
+
+  wAnimFrame = requestAnimationFrame(animateWindow);
+}
+
+let shootingStars = [];
+function spawnShootingStar() {
+  shootingStars.push({ x: Math.random() * wW, y: Math.random() * wH * 0.5, vx: 3 + Math.random() * 4, vy: 1 + Math.random() * 2, life: 1 });
+}
+
+// ── AMBIENT SOUND MIXER ───────────────────────────────────────────────────────
+
+// ── SOUND ENGINE — Gerçekçi procedural sesler ─────────────────────────────────
+
+const SOUNDS = [
+  { id:'rain',    label:'Yağmur',   icon:'🌧️', color:'rgba(137,180,250,0.6)' },
+  { id:'waves',   label:'Dalga',    icon:'🌊', color:'rgba(100,200,220,0.6)' },
+  { id:'fire',    label:'Ateş',     icon:'🔥', color:'rgba(250,150,80,0.6)'  },
+  { id:'wind',    label:'Rüzgar',   icon:'💨', color:'rgba(180,220,255,0.5)' },
+  { id:'forest',  label:'Orman',    icon:'🌿', color:'rgba(120,220,140,0.6)' },
+  { id:'space',   label:'Uzay',     icon:'🌌', color:'rgba(140,100,255,0.6)' },
+  { id:'coffee',  label:'Kafe',     icon:'☕', color:'rgba(180,140,100,0.6)' },
+  { id:'thunder', label:'Fırtına',  icon:'⛈️', color:'rgba(160,160,255,0.6)' },
+];
+
+let audioCtx = null;
+let activeNodes = {};
+let masterGain = null;
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0.65;
+    masterGain.connect(audioCtx.destination);
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+// White noise buffer (stereo for richness)
+function makeNoiseBuffer(ctx, seconds = 4) {
+  const buf = ctx.createBuffer(2, ctx.sampleRate * seconds, ctx.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const d = buf.getChannelData(ch);
+    let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;
+    for (let i = 0; i < d.length; i++) {
+      const w = Math.random() * 2 - 1;
+      // Pink noise (Paul Kellet's method)
+      b0=0.99886*b0+w*0.0555179; b1=0.99332*b1+w*0.0750759;
+      b2=0.96900*b2+w*0.1538520; b3=0.86650*b3+w*0.3104856;
+      b4=0.55000*b4+w*0.5329522; b5=-0.7616*b5-w*0.0168980;
+      d[i] = (b0+b1+b2+b3+b4+b5+b6+w*0.5362)*0.11;
+      b6 = w * 0.115926;
+    }
+  }
+  return buf;
+}
+
+function startSound(id) {
+  const ctx = getAudioCtx();
+  if (activeNodes[id]) return;
+
+  const out = ctx.createGain();
+  out.gain.setValueAtTime(0, ctx.currentTime);
+  out.gain.linearRampToValueAtTime(0.8, ctx.currentTime + 1.8);
+  out.connect(masterGain);
+  const nodes = [out];
+
+  if (id === 'rain') {
+    // Çatıya vuran yağmur: pink noise + highpass + reverb-like delay
+    const buf = makeNoiseBuffer(ctx, 5);
+    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+
+    // Two layers: heavy drops + light patter
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1800;
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 4000; bp.Q.value = 0.4;
+
+    // Drop rhythm — LFO amplitude modulation
+    const dropLFO = ctx.createOscillator(); dropLFO.frequency.value = 0.0; // random drops via script
+    const dropGain = ctx.createGain(); dropGain.gain.value = 1;
+
+    // Delay for reverb-on-roof effect
+    const delay = ctx.createDelay(0.1); delay.delayTime.value = 0.04;
+    const delayGain = ctx.createGain(); delayGain.gain.value = 0.35;
+
+    src.connect(hp); hp.connect(bp); bp.connect(dropGain);
+    dropGain.connect(out); dropGain.connect(delay);
+    delay.connect(delayGain); delayGain.connect(out);
+    src.start();
+
+    // Occasional heavy drop impacts
+    function scheduleDrops() {
+      if (!activeNodes[id]) return;
+      const now = ctx.currentTime;
+      const imp = ctx.createGain();
+      imp.gain.setValueAtTime(0.6 + Math.random()*0.8, now);
+      imp.gain.exponentialRampToValueAtTime(0.001, now + 0.08 + Math.random()*0.12);
+      imp.connect(out);
+      const impBuf = makeNoiseBuffer(ctx, 0.2);
+      const impSrc = ctx.createBufferSource(); impSrc.buffer = impBuf;
+      const impHp = ctx.createBiquadFilter(); impHp.type = 'bandpass'; impHp.frequency.value = 2000 + Math.random()*2000; impHp.Q.value = 1;
+      impSrc.connect(impHp); impHp.connect(imp); impSrc.start(now);
+      setTimeout(scheduleDrops, 80 + Math.random() * 280);
+    }
+    scheduleDrops();
+    nodes.push(src, hp, bp, dropGain, delay, delayGain);
+
+  } else if (id === 'waves') {
+    // Deniz dalgası: düşük frekans sweep + kıyıya vurma ritmi
+    const buf = makeNoiseBuffer(ctx, 6);
+    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 500;
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 300; bp.Q.value = 0.5;
+
+    // Wave swell LFO (slow 0.12 hz = ~8 second waves)
+    const swellLFO = ctx.createOscillator(); swellLFO.type = 'sine'; swellLFO.frequency.value = 0.12;
+    const swellGain = ctx.createGain(); swellGain.gain.value = 280;
+    swellLFO.connect(swellGain); swellGain.connect(lp.frequency);
+
+    // Foam rush LFO (faster)
+    const foamLFO = ctx.createOscillator(); foamLFO.type = 'sine'; foamLFO.frequency.value = 0.28;
+    const foamGain = ctx.createGain(); foamGain.gain.value = 0.4;
+    foamLFO.connect(foamGain); foamGain.connect(out.gain);
+
+    src.connect(lp); lp.connect(bp); bp.connect(out);
+    swellLFO.start(); foamLFO.start(); src.start();
+    nodes.push(src, lp, bp, swellLFO, swellGain, foamLFO, foamGain);
+
+  } else if (id === 'fire') {
+    // Kamp ateşi çıtırtısı: layered noise + crackle impulses
+    const buf = makeNoiseBuffer(ctx, 4);
+    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+
+    // Base rumble (low freq)
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 180;
+    const rumbleGain = ctx.createGain(); rumbleGain.gain.value = 0.7;
+
+    // Fire breathe LFO
+    const breathLFO = ctx.createOscillator(); breathLFO.type = 'sine'; breathLFO.frequency.value = 0.8;
+    const breathGain = ctx.createGain(); breathGain.gain.value = 0.3;
+    breathLFO.connect(breathGain); breathGain.connect(rumbleGain.gain);
+
+    src.connect(lp); lp.connect(rumbleGain); rumbleGain.connect(out);
+    breathLFO.start(); src.start();
+
+    // Crackle/pop impulses — the signature fire sound
+    function scheduleCrackle() {
+      if (!activeNodes[id]) return;
+      const now = ctx.currentTime;
+      const crk = ctx.createGain();
+      const vol = 0.4 + Math.random() * 1.2;
+      crk.gain.setValueAtTime(vol, now);
+      crk.gain.exponentialRampToValueAtTime(0.001, now + 0.015 + Math.random()*0.04);
+      crk.connect(out);
+
+      // Crackle is short burst of noise in high-ish freq
+      const cBuf = makeNoiseBuffer(ctx, 0.1);
+      const cSrc = ctx.createBufferSource(); cSrc.buffer = cBuf;
+      const cBp = ctx.createBiquadFilter(); cBp.type = 'bandpass';
+      cBp.frequency.value = 800 + Math.random() * 2400; cBp.Q.value = 3 + Math.random()*5;
+      cSrc.connect(cBp); cBp.connect(crk); cSrc.start(now);
+
+      // Random interval: occasional pops
+      const next = Math.random() < 0.15
+        ? 20 + Math.random() * 60   // cluster
+        : 100 + Math.random() * 400; // sparse
+      setTimeout(scheduleCrackle, next);
+    }
+    scheduleCrackle();
+    nodes.push(src, lp, rumbleGain, breathLFO, breathGain);
+
+  } else if (id === 'wind') {
+    const buf = makeNoiseBuffer(ctx, 5);
+    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 600; bp.Q.value = 0.3;
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 300;
+
+    // Gust LFO — wind howl
+    const gustLFO = ctx.createOscillator(); gustLFO.type = 'sine'; gustLFO.frequency.value = 0.07;
+    const gustFreqGain = ctx.createGain(); gustFreqGain.gain.value = 400;
+    const gustVolLFO = ctx.createOscillator(); gustVolLFO.type = 'sine'; gustVolLFO.frequency.value = 0.15;
+    const gustVolGain = ctx.createGain(); gustVolGain.gain.value = 0.35;
+
+    gustLFO.connect(gustFreqGain); gustFreqGain.connect(bp.frequency);
+    gustVolLFO.connect(gustVolGain); gustVolGain.connect(out.gain);
+
+    src.connect(bp); bp.connect(hp); hp.connect(out);
+    gustLFO.start(); gustVolLFO.start(); src.start();
+    nodes.push(src, bp, hp, gustLFO, gustFreqGain, gustVolLFO, gustVolGain);
+
+  } else if (id === 'forest') {
+    // Orman: kuş sesi + yaprak hışırtısı
+    const buf = makeNoiseBuffer(ctx, 4);
+    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2000; bp.Q.value = 0.6;
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 800;
+    src.connect(bp); bp.connect(hp); hp.connect(out);
+    src.start();
+
+    // Bird chirps
+    function chirp() {
+      if (!activeNodes[id]) return;
+      const now = ctx.currentTime;
+      const freq = 2000 + Math.random() * 2000;
+      const osc = ctx.createOscillator();
+      const env = ctx.createGain();
+      osc.type = 'sine'; osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.linearRampToValueAtTime(freq * (0.8+Math.random()*0.4), now + 0.1);
+      env.gain.setValueAtTime(0, now);
+      env.gain.linearRampToValueAtTime(0.12, now + 0.02);
+      env.gain.exponentialRampToValueAtTime(0.001, now + 0.15 + Math.random()*0.1);
+      osc.connect(env); env.connect(out); osc.start(now); osc.stop(now + 0.25);
+      setTimeout(chirp, 800 + Math.random() * 3000);
+    }
+    chirp();
+    nodes.push(src, bp, hp);
+
+  } else if (id === 'space') {
+    // Uzay: derin drone + cosmic pad
+    const freqs = [40, 60, 80, 120, 160];
+    freqs.forEach((f, i) => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = 'sine'; osc.frequency.value = f + Math.random()*2;
+      g.gain.value = 0.12 / (i * 0.5 + 1);
+      // Slow detune drift
+      const dLFO = ctx.createOscillator(); dLFO.frequency.value = 0.02 + i*0.008;
+      const dGain = ctx.createGain(); dGain.gain.value = f * 0.008;
+      dLFO.connect(dGain); dGain.connect(osc.frequency);
+      osc.connect(g); g.connect(out); osc.start(); dLFO.start();
+      nodes.push(osc, g, dLFO, dGain);
+    });
+
+  } else if (id === 'coffee') {
+    // Kafe: düşük mırıltı + kaşık sesleri + fısıltı
+    const buf = makeNoiseBuffer(ctx, 4);
+    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 0.5;
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1800;
+    src.connect(bp); bp.connect(lp); lp.connect(out); src.start();
+
+    // Occasional clink/stir
+    function clink() {
+      if (!activeNodes[id]) return;
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator(); const env = ctx.createGain();
+      osc.type = 'sine'; osc.frequency.value = 1200 + Math.random()*600;
+      env.gain.setValueAtTime(0.08, now);
+      env.gain.exponentialRampToValueAtTime(0.001, now + 0.3 + Math.random()*0.2);
+      osc.connect(env); env.connect(out); osc.start(now); osc.stop(now+0.5);
+      setTimeout(clink, 2000 + Math.random() * 5000);
+    }
+    clink();
+    nodes.push(src, bp, lp);
+
+  } else if (id === 'thunder') {
+    // Fırtına: yağmur + gök gürültüsü
+    // Önce yağmur
+    const buf = makeNoiseBuffer(ctx, 5);
+    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1500;
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 3500; bp.Q.value = 0.5;
+    src.connect(hp); hp.connect(bp); bp.connect(out); src.start();
+
+    // Thunder rumble
+    function thunder() {
+      if (!activeNodes[id]) return;
+      const now = ctx.currentTime;
+      const tBuf = makeNoiseBuffer(ctx, 1.5);
+      const tSrc = ctx.createBufferSource(); tSrc.buffer = tBuf;
+      const tLp = ctx.createBiquadFilter(); tLp.type = 'lowpass'; tLp.frequency.value = 200;
+      const tEnv = ctx.createGain();
+      tEnv.gain.setValueAtTime(0, now);
+      tEnv.gain.linearRampToValueAtTime(1.5, now + 0.05);
+      tEnv.gain.exponentialRampToValueAtTime(0.001, now + 1.2 + Math.random()*0.5);
+      tSrc.connect(tLp); tLp.connect(tEnv); tEnv.connect(out); tSrc.start(now);
+      setTimeout(thunder, 6000 + Math.random() * 15000);
+    }
+    setTimeout(thunder, 2000 + Math.random()*3000);
+    nodes.push(src, hp, bp);
+  }
+
+  activeNodes[id] = { out, nodes };
+}
+
+function stopSound(id) {
+  const ctx = getAudioCtx();
+  const entry = activeNodes[id];
+  if (!entry) return;
+  try {
+    entry.out.gain.linearRampToValueAtTime(0, ctx.currentTime + 1.0);
+  } catch(e){}
+  setTimeout(() => {
+    if (entry.nodes) entry.nodes.forEach(n => { try { n.stop&&n.stop(); n.disconnect&&n.disconnect(); } catch(e){} });
+    delete activeNodes[id];
+  }, 1100);
+}
+
+function toggleSound(id) {
+  if (activeNodes[id]) {
+    stopSound(id);
+    document.querySelector(`[data-sid="${id}"]`)?.classList.remove('active');
+  } else {
+    startSound(id);
+    document.querySelector(`[data-sid="${id}"]`)?.classList.add('active');
+  }
+  const any = SOUNDS.some(s => activeNodes[s.id]);
+  document.getElementById('masterVolRow').style.display = any ? 'flex' : 'none';
+}
+
+function setMasterVol(val) {
+  if (masterGain) masterGain.gain.value = val / 100;
+}
+
+function initSoundGrid() {
+  const grid = document.getElementById('soundGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  SOUNDS.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'sound-btn';
+    btn.dataset.sid = s.id;
+    btn.style.setProperty('--sb-color', s.color);
+    btn.innerHTML = `<div class="sound-icon">${s.icon}</div><div class="sound-label">${s.label}</div>`;
+    btn.onclick = () => toggleSound(s.id);
+    grid.appendChild(btn);
+  });
+}
+
+function stopAllSounds() {
+  SOUNDS.forEach(s => { if (activeNodes[s.id]) stopSound(s.id); });
+  document.querySelectorAll('.sound-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('masterVolRow').style.display = 'none';
+}
+
+// ── TIMER ─────────────────────────────────────────────────────────────────────
+
+let timerInterval = null;
+let timerSeconds = 0;
+let timerRunning = false;
+let studyTaskRef = null;
+let sessionXP = 0;
+
+function startStudySession(taskId) {
+  openPlanetSelect();
+}
+
+function _startStudySession(planetId) {
+  studyPlanetId = planetId;
+  const todayActive = getTodayTasks().filter(t => !t.done);
+  studyTaskRef = todayActive[0] || null;
+
+  const planet = state.cats.find(c => c.id === planetId);
+  document.getElementById('studyTaskName').textContent =
+    planet ? `${planet.emoji} ${planet.planet} için çalışıyorsun` : 'Odaklan. Evreni inşa et.';
+
+  sessionXP = 0;
+  updateSessionXP();
+  resetTimer();
+  showView('study');
+  setTimeout(initWindowCanvas, 80);
+  initSoundGrid();
+  spawnDust();
+  const dustLoop = setInterval(() => {
+    if (!document.getElementById('view-study').classList.contains('active')) { clearInterval(dustLoop); return; }
+    spawnDust();
+  }, 1500);
+}
+
+function spawnDust() {
+  const view = document.getElementById('view-study');
+  if (!view) return;
+  const colors = ['rgba(124,108,252,0.6)','rgba(192,132,252,0.5)','rgba(137,180,250,0.5)','rgba(200,190,255,0.4)'];
+  for (let i = 0; i < 4; i++) {
+    const p = document.createElement('div');
+    p.className = 'fdust';
+    const size = 1.5 + Math.random() * 3;
+    p.style.cssText = `
+      width:${size}px;height:${size}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      left:${20 + Math.random()*60}%;
+      bottom:${28 + Math.random()*20}%;
+      animation-duration:${4+Math.random()*5}s;
+      animation-delay:${Math.random()*2}s;
+    `;
+    view.appendChild(p);
+    setTimeout(() => p.remove(), 9000);
+  }
+}
+
+function toggleTimer() {
+  timerRunning ? pauseTimer() : startTimer();
+}
+
+function startTimer() {
+  timerRunning = true;
+  document.getElementById('timerStartBtn').textContent = '⏸ Duraklat';
+  timerInterval = setInterval(() => {
+    timerSeconds++;
+    updateTimerDisplay();
+    if (timerSeconds % 300 === 0) {
+      sessionXP += 5;
+      state.xp += 5;
+      if (studyPlanetId) {
+        if (!state.planets[studyPlanetId]) state.planets[studyPlanetId] = 0;
+        state.planets[studyPlanetId] += 5;
+      }
+      updateSessionXP();
+      save();
+      updateHUD();
+    }
+  }, 1000);
+}
+
+function pauseTimer() {
+  timerRunning = false;
+  clearInterval(timerInterval);
+  document.getElementById('timerStartBtn').textContent = '▶ Devam Et';
+}
+
+function resetTimer() {
+  pauseTimer();
+  timerSeconds = 0;
+  timerRunning = false;
+  document.getElementById('timerStartBtn').textContent = '▶ Başlat';
+  updateTimerDisplay();
+}
+
+function updateTimerDisplay() {
+  const h = Math.floor(timerSeconds / 3600);
+  const m = Math.floor((timerSeconds % 3600) / 60);
+  const s = timerSeconds % 60;
+  const pad = n => String(n).padStart(2, '0');
+  document.getElementById('timerDisplay').textContent =
+    h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+}
+
+function updateSessionXP() {
+  document.getElementById('sessionXPLabel').textContent = `${sessionXP} XP bu oturumda`;
+}
+
+function endStudySession() {
+  pauseTimer();
+  stopAllSounds();
+  if (wAnimFrame) { cancelAnimationFrame(wAnimFrame); wAnimFrame = null; }
+  if (timerSeconds > 0) showXPToast(sessionXP || Math.floor(timerSeconds/60), `${Math.floor(timerSeconds/60)} dakika odaklandın 🌟`);
+  timerSeconds = 0; sessionXP = 0; studyTaskRef = null;
+  showView('galaxy');
+  updateHUD();
+}
+
+// ── EXPOSE ALL GLOBALS ────────────────────────────────────────────────────────
+window.addTask = addTask;
+window.completeTask = completeTask;
+window.deleteTask = deleteTask;
+window.resetTimer = resetTimer;
+window.toggleTimer = toggleTimer;
+window.endStudySession = endStudySession;
+window.setMasterVol = setMasterVol;
+window.changePlanetCount = changePlanetCount;
+window.deletePlanet = deletePlanet;
+window.openAddPlanetModal = openAddPlanetModal;
+window.selectPlanetColor = selectPlanetColor;
+window.selectPlanetEmoji = selectPlanetEmoji;
+window.submitAddPlanet = submitAddPlanet;
+window.startStudySession = startStudySession;
+window.renderStats = renderStats;
+window.renderPlanets = renderPlanets;
+window.toggleSound = toggleSound;
+window.spawnParticles = spawnParticles;
+window.showXPToast = showXPToast;
+
+// ── BIND ALL BUTTONS (no onclick attributes needed) ───────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+
+  // Auth
+  document.getElementById('tab-login').addEventListener('click', () => {
+    document.getElementById('form-login').style.display = 'block';
+    document.getElementById('form-register').style.display = 'none';
+    document.getElementById('tab-login').classList.add('active');
+    document.getElementById('tab-register').classList.remove('active');
+  });
+  document.getElementById('tab-register').addEventListener('click', () => {
+    document.getElementById('form-login').style.display = 'none';
+    document.getElementById('form-register').style.display = 'block';
+    document.getElementById('tab-login').classList.remove('active');
+    document.getElementById('tab-register').classList.add('active');
+  });
+  document.getElementById('loginBtn').addEventListener('click', doLogin);
+  document.getElementById('registerBtn').addEventListener('click', doRegister);
+
+  // Nickname formatting
+  document.getElementById('reg-nick').addEventListener('input', function() {
+    this.value = this.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+  });
+  document.getElementById('exploreInput').addEventListener('input', function() {
+    this.value = this.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+  });
+
+  // Nav
+  document.getElementById('btn-planets').addEventListener('click', () => showView('planets'));
+  document.getElementById('btn-add').addEventListener('click', () => showView('add'));
+  document.getElementById('btn-stats').addEventListener('click', () => showView('stats'));
+  document.getElementById('btn-study').addEventListener('click', () => startStudySession());
+  document.getElementById('btn-explore').addEventListener('click', () => showView('explore'));
+
+  // Back buttons
+  document.getElementById('back-add').addEventListener('click', () => showView('galaxy'));
+  document.getElementById('back-planets').addEventListener('click', () => showView('galaxy'));
+  document.getElementById('back-explore').addEventListener('click', () => showView('galaxy'));
+  document.getElementById('back-stats').addEventListener('click', () => showView('galaxy'));
+
+  // Add task
+  document.getElementById('btn-submit-task').addEventListener('click', addTask);
+
+  // Planet count
+  document.getElementById('planet-count-minus').addEventListener('click', () => changePlanetCount(-1));
+  document.getElementById('planet-count-plus').addEventListener('click', () => changePlanetCount(1));
+
+  // Study controls
+  document.getElementById('btn-reset-timer').addEventListener('click', resetTimer);
+  document.getElementById('timerStartBtn').addEventListener('click', toggleTimer);
+  document.getElementById('btn-end-study').addEventListener('click', endStudySession);
+  document.getElementById('masterVol').addEventListener('input', function() { setMasterVol(this.value); });
+
+  // Explore search
+  document.getElementById('btn-search-galaxy').addEventListener('click', searchGalaxy);
+
+  // User pill
+  document.getElementById('userPill').addEventListener('click', showUserMenu);
+
+  // Enter key
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      const authActive = document.getElementById('view-auth').classList.contains('active');
+      const addActive = document.getElementById('view-add').classList.contains('active');
+      const exploreActive = document.getElementById('view-explore').classList.contains('active');
+      if (addActive) addTask();
+      if (exploreActive) searchGalaxy();
+      if (authActive) {
+        if (document.getElementById('form-login').style.display !== 'none') doLogin();
+        else doRegister();
+      }
+    }
+  });
+});
+
+// ── SHOW VIEW ─────────────────────────────────────────────────────────────────
+const _showViewBase = showView;
+window.showView = function(name) {
+  _showViewBase(name);
+  if (name === 'planets') document.getElementById('planetCountVal').textContent = visiblePlanetCount;
+  if (name === 'explore') { document.getElementById('exploreInput').value = ''; document.getElementById('exploreResult').innerHTML = ''; }
+};
+
+</script>
+</body>
+</html>
